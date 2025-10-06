@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { Suspense } from "react"
 
 import { useEffect, useState } from "react"
 import type { AxiosError } from "axios"
@@ -14,11 +15,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Play, Eye, EyeOff, Loader2 } from "lucide-react"
 import useAuth from "@/lib/hooks/auth/useAuth"
 import useYouTubeCredentials from "@/lib/hooks/youtube/useYouTubeCredentials"
-import GoogleLoginButton from "@/components/auth/GoogleLoginButton"
+import dynamic from "next/dynamic"
+const GoogleLoginButton = dynamic(() => import("@/components/auth/GoogleLoginButton"), { ssr: false })
 import { useToast } from "@/lib/hooks/common/useToast"
 import { cn } from "@/lib/utils"
 
-export default function LoginPage() {
+function LoginContent() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -145,7 +147,7 @@ export default function LoginPage() {
   // No custom loaders here to avoid flicker; rely on instant route prefetch
 
   return (
-    <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
+      <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -250,6 +252,14 @@ export default function LoginPage() {
           </Link>
         </div>
       </div>
-    </div>
+      </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4"><div className="flex items-center gap-3 text-foreground"><Loader2 className="h-5 w-5 animate-spin" /><span>Loading...</span></div></div>}>
+      <LoginContent />
+    </Suspense>
   )
 }
