@@ -4,75 +4,65 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Theme Variables - Clean UI */
-  --brand-primary: #FF4747; /* Warm Red */
-  --brand-primary-dark: #FF6B6B;
-  --brand-primary-light: #FF6B6B;
-  --brand-orange: #FF6B6B;
-  --accent-red: #FF4747;
-  
-  /* Background Colors */
-  --bg-primary: #1A1A1A; /* Warm Charcoal */
-  --bg-secondary: #2C2C2C;
-  --bg-tertiary: #404040;
-  --bg-card: #242424; /* Darker Charcoal */
-  --bg-modal: #242424;
-  
-  /* Text Colors */
-  --text-primary: #FFFFFF;
-  --text-secondary: #A0A0A0;
-  --text-tertiary: #888888;
-  --text-disabled: #555555;
-  --text-inverse: #000000;
-  
-  /* Border Colors */
-  --border-primary: #333333;
-  --border-secondary: #444444;
-  --border-focus: #FF4747;
-  --border-error: #FF6B6B;
-  
-  /* Gradients (subtle/clean) */
-  --gradient-primary: linear-gradient(135deg, #FF4747 0%, #FF6B6B 100%);
-  --gradient-hero: linear-gradient(135deg, #1A1A1A 0%, #2C2C2C 100%);
-  --gradient-background: linear-gradient(180deg, #1A1A1A 0%, #1A1A1A 100%);
-  
-  /* Status Colors */
+  /* Light theme */
+  --brand-primary: #E53E3E;
+  --brand-primary-dark: #E53E3E;
+  --brand-primary-light: #FC8181;
+  --brand-orange: #E53E3E;
+  --accent-red: #E53E3E;
+
+  --bg-primary: #F7FAFC;
+  --bg-secondary: #EDF2F7;
+  --bg-tertiary: #E2E8F0;
+  --bg-card: #FFFFFF;
+  --bg-modal: #FFFFFF;
+
+  --text-primary: #1A202C;
+  --text-secondary: #718096;
+  --text-tertiary: #718096;
+  --text-disabled: #A0AEC0;
+  --text-inverse: #FFFFFF;
+
+  --border-primary: #E2E8F0;
+  --border-secondary: #CBD5E0;
+  --border-focus: #E53E3E;
+  --border-error: #E53E3E;
+
+  --gradient-primary: linear-gradient(135deg, #E53E3E 0%, #FC8181 100%);
+  --gradient-hero: linear-gradient(135deg, #F7FAFC 0%, #EDF2F7 100%);
+  --gradient-background: linear-gradient(180deg, #F7FAFC 0%, #F7FAFC 100%);
+
   --success: #10B981;
   --warning: #F59E0B;
   --error: #EF4444;
   --info: #3B82F6;
   --neutral: #6B7280;
-  
-  /* Crypto Specific */
+
   --profit: #10B981;
   --loss: #EF4444;
   --price-up: #16A34A;
   --price-down: #DC2626;
-  --volume-bg: rgba(253, 29, 29, 0.1);
-  --chart-line: #FD1D1D;
-  
-  /* Opacity Variants */
-  --brand-10: rgba(255, 71, 71, 0.1);
-  --brand-20: rgba(255, 71, 71, 0.2);
-  --brand-30: rgba(255, 71, 71, 0.3);
-  --brand-50: rgba(255, 71, 71, 0.5);
-  --brand-70: rgba(255, 71, 71, 0.7);
-  --brand-90: rgba(255, 71, 71, 0.9);
-  
-  /* Animation/Glow - disabled for clean UI */
+  --volume-bg: rgba(229, 62, 62, 0.1);
+  --chart-line: #E53E3E;
+
+  --brand-10: rgba(229, 62, 62, 0.1);
+  --brand-20: rgba(229, 62, 62, 0.2);
+  --brand-30: rgba(229, 62, 62, 0.3);
+  --brand-50: rgba(229, 62, 62, 0.5);
+  --brand-70: rgba(229, 62, 62, 0.7);
+  --brand-90: rgba(229, 62, 62, 0.9);
+
   --glow-effect: none;
-  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   --hover-glow: none;
-  
-  /* Component Colors */
-  --navbar-bg: rgba(0, 0, 0, 0.9);
-  --navbar-backdrop: rgba(0, 0, 0, 0.8);
-  --navbar-border: rgba(51, 51, 51, 0.3);
-  --footer-bg: #111111;
-  --footer-text: #888888;
-  --footer-links: #B3B3B3;
-  
-  /* Legacy CSS Variables for compatibility */
+
+  --navbar-bg: rgba(255, 255, 255, 0.8);
+  --navbar-backdrop: rgba(255, 255, 255, 0.6);
+  --navbar-border: rgba(203, 213, 225, 0.6);
+  --footer-bg: #FFFFFF;
+  --footer-text: #718096;
+  --footer-links: #4A5568;
+
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
   --card: var(--bg-card);
@@ -80,15 +70,15 @@
   --popover: var(--bg-modal);
   --popover-foreground: var(--text-primary);
   --primary: var(--brand-primary);
-  --primary-foreground: var(--text-primary);
+  --primary-foreground: #ffffff;
   --secondary: var(--bg-tertiary);
   --secondary-foreground: var(--text-primary);
   --muted: var(--bg-tertiary);
   --muted-foreground: var(--text-secondary);
   --accent: var(--brand-primary);
-  --accent-foreground: var(--text-primary);
+  --accent-foreground: #ffffff;
   --destructive: var(--error);
-  --destructive-foreground: var(--text-primary);
+  --destructive-foreground: #ffffff;
   --border: var(--border-primary);
   --input: var(--bg-tertiary);
   --ring: var(--brand-primary);
@@ -101,7 +91,7 @@
   --sidebar: var(--bg-secondary);
   --sidebar-foreground: var(--text-primary);
   --sidebar-primary: var(--brand-primary);
-  --sidebar-primary-foreground: var(--text-primary);
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: var(--bg-tertiary);
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border-primary);
@@ -109,7 +99,35 @@
 }
 
 .dark {
-  /* Dark mode uses the same crypto theme */
+  /* Apply provided dark color scheme */
+  --brand-primary: #FF4747;
+  --brand-primary-dark: #FF6B6B;
+  --brand-primary-light: #FF6B6B;
+  --brand-orange: #FF4747;
+  --accent-red: #FF4747;
+
+  --bg-primary: #1A1A1A; /* background.DEFAULT */
+  --bg-secondary: #2C2C2C; /* background.light */
+  --bg-tertiary: #404040; /* background.lighter */
+  --bg-card: #242424; /* surface */
+  --bg-modal: #242424;
+
+  --text-primary: #FFFFFF; /* text.primary */
+  --text-secondary: #A0A0A0; /* text.secondary */
+  --text-tertiary: #A0A0A0;
+  --text-disabled: #A0A0A0;
+  --text-inverse: #1A1A1A;
+
+  --border-primary: #2C2C2C;
+  --border-secondary: #404040;
+
+  --gradient-primary: linear-gradient(135deg, #FF4747 0%, #FF6B6B 100%);
+
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
   --card: var(--bg-card);
@@ -117,15 +135,15 @@
   --popover: var(--bg-modal);
   --popover-foreground: var(--text-primary);
   --primary: var(--brand-primary);
-  --primary-foreground: var(--text-primary);
+  --primary-foreground: #ffffff;
   --secondary: var(--bg-tertiary);
   --secondary-foreground: var(--text-primary);
   --muted: var(--bg-tertiary);
   --muted-foreground: var(--text-secondary);
-  --accent: var(--brand-primary);
-  --accent-foreground: var(--text-primary);
+  --accent: #FF4747;
+  --accent-foreground: #ffffff;
   --destructive: var(--error);
-  --destructive-foreground: var(--text-primary);
+  --destructive-foreground: #ffffff;
   --border: var(--border-primary);
   --input: var(--bg-tertiary);
   --ring: var(--brand-primary);
@@ -137,11 +155,16 @@
   --sidebar: var(--bg-secondary);
   --sidebar-foreground: var(--text-primary);
   --sidebar-primary: var(--brand-primary);
-  --sidebar-primary-foreground: var(--text-primary);
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: var(--bg-tertiary);
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border-primary);
   --sidebar-ring: var(--brand-primary);
+
+  /* Navbar tokens for dark mode */
+  --navbar-bg: rgba(26, 26, 26, 0.8);
+  --navbar-backdrop: rgba(26, 26, 26, 0.6);
+  --navbar-border: rgba(64, 64, 64, 0.6);
 }
 
 @theme inline {

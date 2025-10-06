@@ -47,6 +47,7 @@ export interface SignupResponse {
 }
 
 const API_BASE_URL = 'https://backend.postsiva.com'
+const DEBUG_LOGS = false
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -57,42 +58,48 @@ const api = axios.create({
   },
 })
 
-// Add request interceptor for logging
+// Add request interceptor (quiet)
 api.interceptors.request.use(
   (config) => {
-    console.log('🚀 API Request:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      headers: config.headers,
-      data: config.data,
-    })
+    if (DEBUG_LOGS) {
+      console.log('🚀 API Request:', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        headers: config.headers,
+        data: config.data,
+      })
+    }
     return config
   },
   (error) => {
-    console.error('❌ API Request Error:', error)
+    if (DEBUG_LOGS) console.error('❌ API Request Error:', error)
     return Promise.reject(error)
   }
 )
 
-// Add response interceptor for logging
+// Add response interceptor (quiet)
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.config.url,
-      data: response.data,
-    })
+    if (DEBUG_LOGS) {
+      console.log('✅ API Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.config.url,
+        data: response.data,
+      })
+    }
     return response
   },
   (error) => {
-    console.error('❌ API Response Error:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url,
-      data: error.response?.data,
-      message: error.message,
-    })
+    if (DEBUG_LOGS) {
+      console.error('❌ API Response Error:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        url: error.config?.url,
+        data: error.response?.data,
+        message: error.message,
+      })
+    }
     return Promise.reject(error)
   }
 )
@@ -107,35 +114,35 @@ export default function useAuth() {
 
   // Initialize auth state from localStorage
   useEffect(() => {
-    console.log('🔄 Initializing auth state from localStorage...')
+    if (DEBUG_LOGS) console.log('🔄 Initializing auth state from localStorage...')
     const token = localStorage.getItem('auth_token')
     const user = localStorage.getItem('user_data')
     
-    console.log('📦 localStorage data:', { token: token ? 'exists' : 'not found', user: user ? 'exists' : 'not found' })
+    if (DEBUG_LOGS) console.log('📦 localStorage data:', { token: token ? 'exists' : 'not found', user: user ? 'exists' : 'not found' })
     
     if (token && user) {
       try {
         const userData = JSON.parse(user)
-        console.log('👤 Parsed user data:', userData)
+        if (DEBUG_LOGS) console.log('👤 Parsed user data:', userData)
         setAuthState({
           user: userData,
           token,
           isAuthenticated: true,
           isLoading: false,
         })
-        console.log('✅ Auth state initialized successfully')
+        if (DEBUG_LOGS) console.log('✅ Auth state initialized successfully')
       } catch (error) {
-        console.error('❌ Error parsing user data:', error)
+        if (DEBUG_LOGS) console.error('❌ Error parsing user data:', error)
         logout()
       }
     } else {
-      console.log('ℹ️ No auth data found, setting as unauthenticated')
+      if (DEBUG_LOGS) console.log('ℹ️ No auth data found, setting as unauthenticated')
       setAuthState(prev => ({ ...prev, isLoading: false }))
     }
   }, [])
 
   const signup = useCallback(async (data: SignupData): Promise<SignupResponse> => {
-    console.log('📝 Starting signup process with data:', { ...data, password: '[REDACTED]' })
+    if (DEBUG_LOGS) console.log('📝 Starting signup process with data:', { ...data, password: '[REDACTED]' })
     
     try {
       const requestData = {
@@ -145,11 +152,11 @@ export default function useAuth() {
         updated_at: new Date().toISOString(),
       }
       
-      console.log('📤 Sending signup request with data:', { ...requestData, password: '[REDACTED]' })
+      if (DEBUG_LOGS) console.log('📤 Sending signup request with data:', { ...requestData, password: '[REDACTED]' })
       
       const response = await api.post('/auth/signup', requestData)
       
-      console.log('✅ Signup successful:', response.data)
+      if (DEBUG_LOGS) console.log('✅ Signup successful:', response.data)
       
       // Save user ID to localStorage
       localStorage.setItem('user_id', response.data.id)
@@ -157,11 +164,11 @@ export default function useAuth() {
       
       return response.data
     } catch (error: any) {
-      console.error('❌ Signup failed:', error)
+      if (DEBUG_LOGS) console.error('❌ Signup failed:', error)
       
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data?.detail || `Signup failed: ${error.response?.status}`
-        console.error('📋 Error details:', {
+        if (DEBUG_LOGS) console.error('📋 Error details:', {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
@@ -174,14 +181,14 @@ export default function useAuth() {
   }, [])
 
   const login = useCallback(async (data: LoginData): Promise<AuthResponse> => {
-    console.log('🔐 Starting login process with email:', data.email)
+    if (DEBUG_LOGS) console.log('🔐 Starting login process with email:', data.email)
     
     try {
-      console.log('📤 Sending login request...')
+      if (DEBUG_LOGS) console.log('📤 Sending login request...')
       
       const response = await api.post('/auth/login', data)
       
-      console.log('✅ Login successful:', {
+      if (DEBUG_LOGS) console.log('✅ Login successful:', {
         token: response.data.access_token ? 'exists' : 'not found',
         user: response.data.user,
       })
@@ -189,7 +196,7 @@ export default function useAuth() {
       // Save auth data to localStorage
       localStorage.setItem('auth_token', response.data.access_token)
       localStorage.setItem('user_data', JSON.stringify(response.data.user))
-      console.log('💾 Saved auth data to localStorage')
+      if (DEBUG_LOGS) console.log('💾 Saved auth data to localStorage')
       
       // Update auth state
       setAuthState({
@@ -198,22 +205,27 @@ export default function useAuth() {
         isAuthenticated: true,
         isLoading: false,
       })
-      console.log('🔄 Updated auth state to authenticated')
+      if (DEBUG_LOGS) console.log('🔄 Updated auth state to authenticated')
       
       return response.data
     } catch (error: any) {
-      console.error('❌ Login failed:', error)
+      if (DEBUG_LOGS) console.error('❌ Login failed:', error)
       
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.detail || `Login failed: ${error.response?.status}`
-        console.error('📋 Error details:', {
+        const status = error.response?.status
+        let errorMessage = 'Login failed. Please try again.'
+        if (status === 401) errorMessage = 'Invalid email or password.'
+        else if (status === 429) errorMessage = 'Too many attempts. Please wait and try again.'
+        else if (status === 500) errorMessage = 'Server error during login. Please try again later.'
+        else if (error.response?.data?.detail) errorMessage = String(error.response.data.detail)
+        if (DEBUG_LOGS) console.error('📋 Error details:', {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
         })
         throw new Error(errorMessage)
       } else {
-        throw new Error('Login failed due to network error')
+        throw new Error('Network error. Please check your connection and try again.')
       }
     }
   }, [])
@@ -275,12 +287,12 @@ export default function useAuth() {
           'Content-Type': 'application/json',
         }
     
-    console.log('🔑 Generated auth headers:', { hasToken: !!token, headers })
+    if (DEBUG_LOGS) console.log('🔑 Generated auth headers:', { hasToken: !!token, headers })
     return headers
   }, [])
 
   const fetchWithAuth = useCallback(async (url: string, options: any = {}) => {
-    console.log('🌐 Making authenticated request to:', url)
+    if (DEBUG_LOGS) console.log('🌐 Making authenticated request to:', url)
     
     const authHeaders = getAuthHeaders()
     
@@ -295,17 +307,17 @@ export default function useAuth() {
         },
       })
       
-      console.log('✅ Authenticated request successful:', {
+      if (DEBUG_LOGS) console.log('✅ Authenticated request successful:', {
         status: response.status,
         url,
       })
       
       return response
     } catch (error: any) {
-      console.error('❌ Authenticated request failed:', error)
+      if (DEBUG_LOGS) console.error('❌ Authenticated request failed:', error)
       
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        console.log('🔒 Unauthorized response, logging out...')
+        if (DEBUG_LOGS) console.log('🔒 Unauthorized response, logging out...')
         logout()
       }
       
@@ -315,13 +327,15 @@ export default function useAuth() {
 
   // Log current auth state when it changes
   useEffect(() => {
-    console.log('🔄 Auth state updated:', {
-      isAuthenticated: authState.isAuthenticated,
-      isLoading: authState.isLoading,
-      hasUser: !!authState.user,
-      hasToken: !!authState.token,
-      user: authState.user ? { id: authState.user.id, email: authState.user.email, username: authState.user.username } : null,
-    })
+    if (DEBUG_LOGS) {
+      console.log('🔄 Auth state updated:', {
+        isAuthenticated: authState.isAuthenticated,
+        isLoading: authState.isLoading,
+        hasUser: !!authState.user,
+        hasToken: !!authState.token,
+        user: authState.user ? { id: authState.user.id, email: authState.user.email, username: authState.user.username } : null,
+      })
+    }
   }, [authState])
 
   return {

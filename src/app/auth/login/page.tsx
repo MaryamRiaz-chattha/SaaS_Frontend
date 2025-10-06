@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import type { AxiosError } from "axios"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -14,20 +15,23 @@ import { Play, Eye, EyeOff, Loader2 } from "lucide-react"
 import useAuth from "@/lib/hooks/auth/useAuth"
 import useYouTubeCredentials from "@/lib/hooks/youtube/useYouTubeCredentials"
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton"
+import { useToast } from "@/lib/hooks/common/useToast"
+import { cn } from "@/lib/utils"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
-  const { login } = useAuth()
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const { checkYouTubeCredentials } = useYouTubeCredentials()
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setIsSubmitting(true)
     setError("")
 
     try {
@@ -35,18 +39,78 @@ export default function LoginPage() {
         email,
         password,
       })
-      // After login, silently check YouTube credentials and route accordingly
-      try {
-        const result: any = await checkYouTubeCredentials(false)
-        const hasValidToken = !!result && result.success === true && !!result.data && !!result.data.access_token
-        router.push(hasValidToken ? "/dashboard" : "/auth/credential")
-      } catch {
-        router.push("/auth/credential")
-      }
+      // Kick off credentials check in background (no UI flicker)
+      ;(async () => {
+        try {
+          const result: any = await checkYouTubeCredentials(false, true)
+          const hasValidToken = !!result && result.success === true && !!result.data && !!result.data.access_token
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('needs_youtube_credentials', hasValidToken ? '0' : '1')
+          }
+        } catch {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('needs_youtube_credentials', '1')
+          }
+        }
+      })()
+      router.replace("/dashboard")
     } catch (err: any) {
-      setError(err.message || "Login failed. Please check your credentials.")
+      let message = "Login failed. Please try again."
+      const axiosErr = err as AxiosError<any>
+      const status = axiosErr?.response?.status
+      const apiDetail = (axiosErr?.response?.data as any)?.detail
+      if (status === 401) {
+        message = "Invalid email or password."
+      } else if (status === 429) {
+        message = "Too many attempts. Please wait a moment and try again."
+      } else if (status === 500) {
+        message = "Server error during login. Please try again later."
+      } else if (apiDetail) {
+        message = String(apiDetail)
+      } else if (axiosErr?.message) {
+        message = axiosErr.message
+      }
+      setError(message)
+      toast({
+        title: "Login failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      // End submitting state only if we're not redirecting (i.e., on error)
+      setIsSubmitting(false)
     }
   }
+
+  // Prefetch dashboard for instant transition
+  useEffect(() => {
+    router.prefetch('/dashboard')
+  }, [router])
+
+  // If already authenticated: immediately redirect to dashboard (no loader flicker)
+  useEffect(() => {
+    const run = async () => {
+      if (!isAuthenticated) return
+      router.replace("/dashboard")
+      // Background credential check (optional; won't block navigation)
+      ;(async () => {
+        try {
+          const result: any = await checkYouTubeCredentials(false, true)
+          const hasValidToken = !!result && result.success === true && !!result.data && !!result.data.access_token
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('needs_youtube_credentials', hasValidToken ? '0' : '1')
+          }
+        } catch {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('needs_youtube_credentials', '1')
+          }
+        }
+      })()
+    }
+    run()
+  }, [isAuthenticated, checkYouTubeCredentials, router])
+
+  // No custom loaders here to avoid flicker; rely on instant route prefetch
 
   return (
     <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
@@ -68,11 +132,6 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="crypto-text-primary">Email</Label>
@@ -83,7 +142,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   className="crypto-input"
                 />
               </div>
@@ -98,7 +157,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                     className="crypto-input"
                   />
                   <button
@@ -117,15 +176,15 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full crypto-button-primary" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign In"
+              <Button
+                type="submit"
+                className={cn(
+                  "w-full crypto-button-primary",
+                  isSubmitting && "bg-[var(--brand-primary-dark)] border-[var(--brand-primary-dark)]"
                 )}
+                disabled={isSubmitting}
+              >
+                {"Sign In"}
               </Button>
             </form>
 

@@ -12,12 +12,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Play, Bell, Settings, LogOut, User } from "lucide-react"
+import { Play, Bell, Settings, LogOut, User, Sun, Moon } from "lucide-react"
+import { useTheme } from "next-themes"
 import useAuth from "@/lib/hooks/auth/useAuth"
 
 export function DashboardHeader() {
   const [notifications] = useState(3) // Mock notification count
   const { user, logout } = useAuth()
+  const { theme, setTheme } = useTheme()
+  const isDark = theme === 'dark'
 
   const handleLogout = () => {
     logout()
@@ -78,6 +81,15 @@ export function DashboardHeader() {
                   <p className="text-xs leading-none text-muted-foreground">{user?.email || "user@example.com"}</p>
                 </div>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setTheme(isDark ? 'light' : 'dark')}>
+                {isDark ? (
+                  <Sun className="mr-2 h-4 w-4" />
+                ) : (
+                  <Moon className="mr-2 h-4 w-4" />
+                )}
+                <span>{isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />

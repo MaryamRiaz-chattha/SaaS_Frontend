@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default:
           "crypto-button-primary shadow-xs hover:shadow-lg",
         destructive:
-          "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "crypto-button-secondary shadow-xs",
         secondary:

@@ -103,8 +103,10 @@ export function Sidebar() {
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full justify-start gap-4 h-12 rounded-lg text-white transition-all duration-200",
-                        isActive ? "bg-[var(--bg-tertiary)] text-white" : "hover:bg-[var(--bg-tertiary)] bg-transparent text-white",
+                        "w-full justify-start gap-4 h-12 rounded-lg text-foreground transition-all duration-200",
+                        isActive
+                          ? "bg-accent text-accent-foreground"
+                          : "bg-transparent hover:bg-accent hover:text-accent-foreground",
                       )}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -120,8 +122,10 @@ export function Sidebar() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full justify-between h-12 px-3 cursor-pointer gap-3 mb-2 rounded-lg text-white transition-all duration-200",
-                    pathname === '/dashboard/playlists' ? "bg-[var(--bg-tertiary)] text-white" : "hover:bg-[var(--bg-tertiary)] bg-transparent text-white"
+                    "w-full justify-between h-12 px-3 cursor-pointer gap-3 mb-2 rounded-lg text-foreground transition-all duration-200",
+                    pathname === '/dashboard/playlists'
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-transparent hover:bg-accent hover:text-accent-foreground"
                   )}
                   onClick={() => setIsPlaylistsOpen(!isPlaylistsOpen)}
                 >
@@ -139,7 +143,7 @@ export function Sidebar() {
                 {isPlaylistsOpen && (
                   <div className="ml-6 space-y-2">
                     {playlistsLoading ? (
-                      <div className="px-3 py-2 text-sm text-white">
+                      <div className="px-3 py-2 text-sm text-foreground">
                         Loading playlists...
                       </div>
                     ) : playlists.length > 0 ? (
@@ -149,8 +153,10 @@ export function Sidebar() {
                             variant="ghost"
                             size="sm"
                             className={cn(
-                              "w-full justify-start h-10 px-3 text-sm cursor-pointer mb-2 rounded-md text-white transition-all duration-200",
-                              pathname === `/dashboard/playlists?id=${playlist.id}` ? "bg-[var(--bg-tertiary)] text-white" : "hover:bg-[var(--bg-tertiary)] bg-transparent text-white"
+                              "w-full justify-start h-10 px-3 text-sm cursor-pointer mb-2 rounded-md text-foreground transition-all duration-200",
+                              pathname === `/dashboard/playlists?id=${playlist.id}`
+                                ? "bg-accent text-accent-foreground"
+                                : "bg-transparent hover:bg-accent hover:text-accent-foreground"
                             )}
                             onClick={() => {
                               setIsMobileMenuOpen(false)
@@ -165,7 +171,7 @@ export function Sidebar() {
                         </Link>
                       ))
                     ) : (
-                      <div className="px-3 py-2 text-sm text-white">
+                      <div className="px-3 py-2 text-sm text-foreground">
                         No playlists found
                       </div>
                     )}

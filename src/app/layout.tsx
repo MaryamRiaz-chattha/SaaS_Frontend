@@ -1,8 +1,16 @@
 import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
+import { Poppins } from 'next/font/google'
 import './globals.css'
 import '../styles/dashboard-responsive.css'
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/toaster'
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  weight: ['400', '500', '600', '700']
+})
 
 export const metadata: Metadata = {
   title: 'YouTube Automator',
@@ -15,17 +23,22 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <style>{`
 html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
+  font-family: ${poppins.style.fontFamily};
+  --font-sans: ${poppins.variable};
   --font-mono: ${GeistMono.variable};
 }
         `}</style>
       </head>
-      <body className="crypto-gradient-bg">{children}</body>
+      <body className="crypto-gradient-bg">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          {children}
+          <Toaster />
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

@@ -96,7 +96,7 @@ export default function useYouTubeCredentials() {
     return null
   }, [user])
 
-  const checkYouTubeCredentials = useCallback(async (showSuccessToast = false): Promise<YouTubeCredentials | null> => {
+  const checkYouTubeCredentials = useCallback(async (showSuccessToast = false, suppressToast: boolean = false): Promise<YouTubeCredentials | null> => {
     if (!userId) {
       setCredentialsState(prev => ({
         ...prev,
@@ -181,7 +181,7 @@ export default function useYouTubeCredentials() {
       }))
 
       // Don't show toast for 404 (no credentials found) as it's expected
-      if (error.response?.status !== 404) {
+      if (!suppressToast && error.response?.status !== 404) {
         toast({ 
           title: 'Failed to check credentials', 
           description: errorMessage,
