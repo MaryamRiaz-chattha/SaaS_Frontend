@@ -1,0 +1,12 @@
+node_modules
+.git
+.next
+.env.local
+.env.*.local
+*.log
+.DS_Store
+scripts/
+cursor-*.md
+FILE-RENAMING-AGENT-README.md
+HOOKS_ORGANIZATION.md
+hello.jpeg
