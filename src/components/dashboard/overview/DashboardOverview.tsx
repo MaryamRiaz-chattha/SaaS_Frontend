@@ -2,6 +2,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import { mapApiErrorToMessage } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/hooks/auth"
 import { useDashboardOverview } from "@/lib/hooks/dashboard/overview"
@@ -51,7 +52,7 @@ export default function DashboardOverview() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Error Loading Dashboard</h2>
-          <p className="text-muted-foreground">{error}</p>
+          <p className="text-muted-foreground">{mapApiErrorToMessage(error)}</p>
         </div>
       </div>
     )

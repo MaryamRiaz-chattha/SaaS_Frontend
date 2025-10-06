@@ -12,6 +12,7 @@ import Link from "next/link"
 import { useState, useMemo } from "react"
 import RefreshButton from "@/components/ui/refresh-button"
 import usePlaylistVideos from "@/lib/hooks/dashboard/playlists/usePlaylistVideos"
+import { mapApiErrorToMessage } from "@/lib/utils"
 
 // Helper functions
 const formatDuration = (duration: string) => {
@@ -174,7 +175,7 @@ export default function PlaylistVideosPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2 text-red-600">Error Loading Playlist</h2>
-          <p className="text-muted-foreground mb-4">{error}</p>
+          <p className="text-muted-foreground mb-4">{mapApiErrorToMessage(error)}</p>
           <Button asChild>
             <Link href="/dashboard/playlists">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -519,7 +520,7 @@ export default function PlaylistVideosPage() {
             {isVideosLoading ? (
               <div className="flex items-center justify-center py-10 text-muted-foreground">Loading playlist videos...</div>
             ) : videosError ? (
-              <div className="flex items-center justify-center py-10 text-red-600">{videosError}</div>
+            <div className="flex items-center justify-center py-10 text-red-600">{mapApiErrorToMessage(videosError)}</div>
             ) : !playlistVideos?.data?.length ? (
               <div className="flex items-center justify-center py-10 text-muted-foreground">No videos found in this playlist.</div>
             ) : (

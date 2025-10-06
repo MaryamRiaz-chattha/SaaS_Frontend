@@ -8,6 +8,7 @@ import usePlaylistAnalytics from "@/lib/hooks/dashboard/playlists/usePlaylistAna
 import usePlaylistVideos from "@/lib/hooks/dashboard/playlists/usePlaylistVideos"
 import RefreshButton from "@/components/ui/refresh-button"
 import Link from "next/link"
+import { mapApiErrorToMessage } from "@/lib/utils"
   
 // ===== Helpers =====
 const brand = {
@@ -107,7 +108,7 @@ function PlaylistData({ playlistId }: { playlistId: string }) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] text-center">
         <h2 className="text-2xl font-bold text-destructive mb-2">Failed to load playlist</h2>
-        <p className="text-muted-foreground mb-4">{error || 'No playlist data available'}</p>
+        <p className="text-muted-foreground mb-4">{mapApiErrorToMessage(error) || 'No playlist data available'}</p>
         <Button onClick={() => window.location.reload()}>
           <RefreshCw className="w-4 h-4 mr-2" />
           Try Again

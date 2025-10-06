@@ -69,3 +69,18 @@ export const getSafeEngagementColor = (rate: number | null | undefined): string 
   if (safeRate >= 2) return "crypto-text-secondary bg-brand-10 border-brand-200"
   return "text-red-600 bg-red-100 border-red-200"
 }
+
+// Friendly API error message mapping for UI
+export function mapApiErrorToMessage(error: any, fallback = 'Something went wrong. Please try again.'): string {
+  try {
+    const status = error?.response?.status
+    const detail = error?.response?.data?.detail || error?.message
+    if (status === 401) return 'Your session expired or you are not authorized. Please sign in again.'
+    if (status === 403) return 'Access denied. You do not have permission to view this.'
+    if (status === 404) return 'We could not find the requested data.'
+    if (status === 429) return 'Too many requests. Please wait and try again.'
+    if (status === 500) return 'Server error. Please try again later.'
+    if (typeof detail === 'string' && detail.length > 0) return detail
+  } catch {}
+  return fallback
+}
