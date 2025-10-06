@@ -6,7 +6,7 @@ import useYouTubeCredentialGuard from '@/lib/hooks/youtube/useYouTubeCredentialG
 
 export default function page() {
   // Guard: if user lacks YouTube credentials, redirect to connect page
-  const { shouldAllowAccess } = useYouTubeCredentialGuard({ redirectTo: '/auth/youtube-connect', allowBypass: false })
+  const { shouldAllowAccess } = useYouTubeCredentialGuard({ redirectTo: '/auth/credential', allowBypass: false })
 
   if (!shouldAllowAccess) {
     return (

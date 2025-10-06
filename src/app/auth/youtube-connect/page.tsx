@@ -91,51 +91,49 @@ export default function YouTubeConnectPage() {
     // Clear any existing error states
   }
 
+  // If no client credentials exist, send user to credentials form first
+  useEffect(() => {
+    // Heuristic: if backend keeps returning 401 for token and we have no authUrl yet,
+    // and user has not created client credentials through our form, push to /auth/credential.
+    // We keep it simple: when we land here without authUrl, we prefer credential form first.
+    if (!authUrl && !isLoadingAny && !hasCredentials) {
+      // Route to the credentials page to collect client id/secret
+      // This complements the dashboard guard and handles direct visits to this page
+      // without configured client credentials.
+      // We store intended return path.
+      try {
+        localStorage.setItem('youtube_redirect_after_auth', '/dashboard')
+      } catch {}
+      // Redirect to credential entry page
+      // Delay one tick to avoid interfering with initial render
+      const t = setTimeout(() => router.replace('/auth/credential'), 0)
+      return () => clearTimeout(t)
+    }
+  }, [authUrl, isLoadingAny, hasCredentials, router])
+
   const handleLogout = () => {
     logout()
   }
 
   // Check for existing credentials on component mount
+  // Soft-check only when user clicks refresh; avoid auto-check to prevent noisy errors
   useEffect(() => {
-    checkYouTubeCredentials(false)
-  }, [checkYouTubeCredentials])
+    // Intentionally no auto-check on mount to keep UI-first and resilient
+  }, [])
 
   // Determine the current state and what UI to show
   const isLoadingAny = isLoading || isConnecting || isChecking
-  const hasAnyError = error || credentialsError
+  const hasAnyError = false // Always render the connect UI; never block on backend errors
   const hasCredentialsData = !!credentials
   const showCredentialsFound = hasCredentials && !authUrl
   const showNoCredentials = !hasCredentials && !authUrl && !hasAnyError
   const showOAuthFlow = authUrl && !hasAnyError
 
   // Auto-initiate OAuth if user doesn't have credentials (after initial check completes)
-  useEffect(() => {
-    const shouldAutoConnect = 
-      !isLoadingAny && 
-      !hasCredentials && 
-      !authUrl && 
-      !hasAnyError && 
-      lastChecked && // Only after we've completed the initial check
-      showNoCredentials // Ensure we're in the "no credentials" state
-
-    if (shouldAutoConnect) {
-      // Add a small delay to ensure UI has updated and to prevent double-calls
-      const timeoutId = setTimeout(() => {
-        handleYouTubeConnect()
-      }, 2000) // 2 second delay to show the "no credentials" state briefly
-
-      return () => clearTimeout(timeoutId)
-    }
-  }, [isLoadingAny, hasCredentials, authUrl, hasAnyError, lastChecked, showNoCredentials, handleYouTubeConnect])
+  // No auto-connect; user explicitly initiates
 
   // If checking, show only a full-screen loader
-  if (isChecking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
-  }
+  // Never block the route; always show the connect UI
 
   // If credentials exist, immediately redirect to dashboard with minimal UI
   useEffect(() => {
@@ -201,13 +199,7 @@ export default function YouTubeConnectPage() {
 
             {/* Credentials Found - Valid: now skipped (auto-redirect) */}
             
-            {/* Error Display */}
-            {hasAnyError && !isLoadingAny && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error || credentialsError}</AlertDescription>
-              </Alert>
-            )}
+            {/* Error Display intentionally suppressed to keep flow UI-first */}
 
             {/* Success Message */}
             {message && !error && !credentialsError && (
@@ -273,7 +265,7 @@ export default function YouTubeConnectPage() {
             )}
 
             {/* Action Buttons */}
-            {showNoCredentials && !isLoadingAny && (
+            {(showNoCredentials || true) && !isLoadingAny && (
               <Button
                 onClick={handleYouTubeConnect}
                 className="w-full bg-red-500 hover:bg-red-600 text-white"
@@ -286,7 +278,7 @@ export default function YouTubeConnectPage() {
             )}
 
             {/* Retry Button */}
-            {hasAnyError && !isLoadingAny && (
+            {(error || credentialsError) && !isLoadingAny && (
               <Button
                 onClick={handleRetry}
                 variant="outline"
