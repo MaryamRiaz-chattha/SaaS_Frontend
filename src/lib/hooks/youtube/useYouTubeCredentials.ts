@@ -127,7 +127,7 @@ export default function useYouTubeCredentials() {
       // }
       const success = !!response.data && response.data.success === true
       const hasToken = success && !!response.data.data && !!response.data.data.access_token
-      const hasValidCredentials = hasToken
+      const hasValidCredentials = !!hasToken
       
       setCredentialsState(prev => ({
         ...prev,
@@ -147,27 +147,15 @@ export default function useYouTubeCredentials() {
       return response.data || null
 
     } catch (error: any) {
-      let errorMessage = 'Failed to check YouTube credentials'
+      let errorMessage = 'YouTube credentials not found'
       let hasCredentials = false
-      let shouldSetError = true
+      let shouldSetError = false
 
       if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          errorMessage = 'Authentication failed. Please login again.'
-        } else if (error.response?.status === 404) {
-          // /youtube/get-token not found or no token
-          errorMessage = 'No YouTube token found'
-          hasCredentials = false
-          shouldSetError = false // treat as expected when no token exists
-        } else if (error.response?.status === 403) {
-          errorMessage = 'Access denied to YouTube credentials'
-        } else if (error.response?.status === 500) {
-          errorMessage = 'Server error. Please try again later.'
-        } else {
-          errorMessage = `Request failed: ${error.response?.status} ${error.response?.statusText}`
-        }
+        // Regardless of status, treat as not connected; keep message generic
+        errorMessage = 'YouTube credentials not found'
       } else if (error.message) {
-        errorMessage = error.message
+        errorMessage = 'Unable to verify YouTube credentials'
       }
 
       setCredentialsState(prev => ({
@@ -180,8 +168,8 @@ export default function useYouTubeCredentials() {
         lastChecked: Date.now(),
       }))
 
-      // Don't show toast for 404 (no credentials found) as it's expected
-      if (!suppressToast && error.response?.status !== 404) {
+      // Optional toast; suppressed by default in guard flows
+      if (!suppressToast) {
         toast({ 
           title: 'Failed to check credentials', 
           description: errorMessage,

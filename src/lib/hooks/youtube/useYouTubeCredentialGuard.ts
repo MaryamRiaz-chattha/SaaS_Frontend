@@ -59,8 +59,9 @@ export default function useYouTubeCredentialGuard(options: YouTubeCredentialGuar
     // Don't redirect if bypassing is allowed
     if (allowBypass) return false
     
-    // Redirect if user doesn't have YouTube credentials
-    return !hasCredentials && !credentialsError?.includes('404')
+    // Redirect whenever credentials are not confirmed, regardless of error type
+    // Any error or negative check means we require the user to connect YouTube
+    return !hasCredentials
   }
 
   // Auto-check credentials when the guard is used
