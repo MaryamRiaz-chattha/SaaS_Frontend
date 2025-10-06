@@ -2,8 +2,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Header } from "@/components/Home-Content/Header"
-import { Footer } from "@/components/Home-Content/Footer"
+import { Header } from "@/components/landing-page-components/Header"
+import { Footer } from "@/components/landing-page-components/Footer"
 import {
   Brain,
   ImageIcon,

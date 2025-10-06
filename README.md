@@ -34,18 +34,18 @@ A comprehensive YouTube content management platform built with Next.js 15, React
 │   │   ├── videos/              # Video management
 │   │   ├── playlists/           # Playlist management
 │   │   ├── upload/              # Video upload interface
-│   │   └── Settings/            # User settings
+│   │   └── user-settings/       # User settings
 │   ├── youtube-studio-dashboard/ # YouTube Studio clone
 │   │   ├── Analytics/           # Analytics interface
 │   │   ├── content/             # Content management
 │   │   ├── Community/           # Community features
 │   │   ├── Earn/                # Monetization tools
 │   │   └── [other studio features]/
-│   ├── features/                # Feature showcase
-│   ├── About/                   # About page
+│   ├── feature-showcase/        # Feature showcase
+│   ├── about-page/              # About page
 │   └── globals.css              # Global styles
 ├── components/                   # Reusable UI components
-│   ├── Home-Content/            # Landing page components
+│   ├── landing-page-components/ # Landing page components
 │   ├── dashboard/               # Dashboard-specific components
 │   │   ├── overview/            # Dashboard overview
 │   │   ├── videos/              # Video components

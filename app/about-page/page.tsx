@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Header } from "@/components/Home-Content/Header"
-import { Footer } from "@/components/Home-Content/Footer"
+import { Header } from "@/components/landing-page-components/Header"
+import { Footer } from "@/components/landing-page-components/Footer"
 import { Play, Users, Target, Award, ArrowRight, CheckCircle } from "lucide-react"
 
 export default function AboutPage() {
