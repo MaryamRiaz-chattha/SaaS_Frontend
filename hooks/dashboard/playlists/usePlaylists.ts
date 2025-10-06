@@ -15,7 +15,7 @@ export function usePlaylists() {
       // Get token from localStorage (you might want to adjust this based on your auth implementation)
       const token = localStorage.getItem('auth_token') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1emFpciIsImV4cCI6MTc1NjgzMDY4M30.aOBeTuTo2AaSQttMBCwvFxm1Zq6fK2FQ3F-fLw2WL_c'
       
-      const response = await fetch(`https://saas-backend.duckdns.org/dashboard/playlists?refresh=${refresh}`, {
+      const response = await fetch(`https://backend.postsiva.com/dashboard/playlists?refresh=${refresh}`, {
         method: 'GET',
         headers: {
           'accept': 'application/json',

@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Play, Eye, EyeOff, Loader2 } from "lucide-react"
 import useAuth from "@/hooks/auth/useAuth"
 import useYouTubeCredentials from "@/hooks/youtube/useYouTubeCredentials"
+import GoogleLoginButton from "@/components/auth/GoogleLoginButton"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -127,6 +128,19 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 crypto-text-secondary">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Google Login Button */}
+            <GoogleLoginButton />
 
             <div className="mt-6 text-center">
               <p className="text-sm crypto-text-secondary">

@@ -35,7 +35,7 @@ export function useChannelPlaylists() {
         throw new Error('Authentication required')
       }
 
-      const response = await fetch('https://saas-backend.duckdns.org/playlists/?refresh=false', {
+      const response = await fetch('https://backend.postsiva.com/playlists/?refresh=false', {
         method: 'GET',
         headers: {
           'accept': 'application/json',

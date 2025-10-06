@@ -242,7 +242,7 @@ export const useUploadPage = () => {
       try {
         const token = localStorage.getItem('auth_token')
         if (!token) throw new Error('No authentication token found')
-        const url = `https://saas-backend.duckdns.org/all-in-one/${videoId}/process`
+        const url = `https://backend.postsiva.com/all-in-one/${videoId}/process`
         console.log('[AllInOne] Request', {
           url,
           videoId,

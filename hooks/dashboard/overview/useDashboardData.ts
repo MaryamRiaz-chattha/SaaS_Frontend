@@ -227,7 +227,7 @@ const useDashboardOverview = () => {
         throw new Error("No authentication token found");
       }
 
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://saas-backend.duckdns.org";
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://backend.postsiva.com";
       const response = await fetch(`${API_BASE_URL}/dashboard-overview/?refresh=${refresh}`, {
         method: "GET",
         headers: {

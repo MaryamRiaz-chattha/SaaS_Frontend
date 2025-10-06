@@ -3,7 +3,7 @@ import axios from 'axios'
 import useAuth from '../auth/useAuth'
 import { useToast } from '@/components/ui/use-toast'
 
-const API_BASE_URL = 'https://saas-backend.duckdns.org'
+const API_BASE_URL = 'https://backend.postsiva.com'
 
 export interface TimestampsGenerateResponse {
   video_id: string

@@ -28,7 +28,7 @@ export interface YouTubeTokenState {
   token: YouTubeToken | null
 }
 
-const API_BASE_URL = 'https://saas-backend.duckdns.org'
+const API_BASE_URL = 'https://backend.postsiva.com'
 
 // Create axios instance for YouTube API calls
 const youtubeApi = axios.create({

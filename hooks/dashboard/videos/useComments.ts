@@ -71,7 +71,7 @@ const useComments = ({
         throw new Error("No authentication token found");
       }
 
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://saas-backend.duckdns.org";
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://backend.postsiva.com";
       const params = new URLSearchParams({
         limit: limit.toString(),
         refresh: refreshData.toString(),
@@ -162,7 +162,7 @@ const useComments = ({
         throw new Error("No authentication token found");
       }
 
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://saas-backend.duckdns.org";
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://backend.postsiva.com";
       const url = `${API_BASE_URL}/comments/${commentId}`;
       
       console.log("🌐 Making DELETE request to:", url);
@@ -209,7 +209,7 @@ const useComments = ({
         throw new Error("No authentication token found");
       }
 
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://saas-backend.duckdns.org";
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://backend.postsiva.com";
       const url = `${API_BASE_URL}/comments/reply`;
       
       console.log("🌐 Making POST request to:", url);

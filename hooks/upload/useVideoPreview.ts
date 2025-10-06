@@ -46,7 +46,7 @@ export default function useVideoPreview() {
       console.log(`[Video Preview] Fetching video data for: ${videoId}`)
       
       const response = await axios.get(
-        `https://saas-backend.duckdns.org/videos/${videoId}`,
+        `https://backend.postsiva.com/videos/${videoId}`,
         { headers }
       )
 

@@ -20,7 +20,7 @@ const usePlaylistAnalytics = (playlistId: string) => {
       const token = localStorage.getItem('auth_token') 
 
       const response = await fetch(
-        `https://saas-backend.duckdns.org/playlists/${playlistId}?refresh=${refresh}`,
+        `https://backend.postsiva.com/playlists/${playlistId}?refresh=${refresh}`,
         {
           headers: {
             Accept: "application/json",

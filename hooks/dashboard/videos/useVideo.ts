@@ -29,7 +29,7 @@ const useVideo = (videoId: string) => {
         throw new Error('No authentication token found');
       }
 
-      console.log('📞 Making API call to:', `https://saas-backend.duckdns.org/single-video/${videoId}`);
+      console.log('📞 Making API call to:', `https://backend.postsiva.com/single-video/${videoId}`);
       console.log('🆔 Video ID being used:', videoId);
       console.log('🔍 Video ID format check:', {
         isYouTubeId: /^[a-zA-Z0-9_-]{11}$/.test(videoId),
@@ -42,7 +42,7 @@ const useVideo = (videoId: string) => {
         refresh: refresh.toString(),
       });
       
-      const response = await fetch(`https://saas-backend.duckdns.org/single-video/${videoId}?${params}`, {
+      const response = await fetch(`https://backend.postsiva.com/single-video/${videoId}?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'accept': 'application/json',

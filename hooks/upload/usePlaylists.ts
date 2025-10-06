@@ -37,7 +37,7 @@ export default function usePlaylists() {
       console.log('[Playlists] Fetching user playlists...')
       
       const response = await axios.get(
-        'https://saas-backend.duckdns.org/playlists/channel-playlists',
+        'https://backend.postsiva.com/playlists/channel-playlists',
         { headers }
       )
 

@@ -77,7 +77,7 @@ const useVideos = () => {
         offset: '0',
       });
 
-      const response = await fetch(`https://saas-backend.duckdns.org/dashboard-overview/videos?${params}`, {
+      const response = await fetch(`https://backend.postsiva.com/dashboard-overview/videos?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'accept': 'application/json',
