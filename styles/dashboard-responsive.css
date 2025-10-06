@@ -1,0 +1,99 @@
+/* Dashboard Responsive Improvements */
+.dashboard-container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.chart-container {
+  min-height: 180px;
+  max-height: 400px;
+}
+
+@media (max-width: 640px) {
+  .chart-container {
+    min-height: 160px;
+    max-height: 250px;
+  }
+  
+  .chart-title {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .chart-description {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .chart-container {
+    min-height: 200px;
+    max-height: 300px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .chart-container {
+    min-height: 250px;
+    max-height: 350px;
+  }
+}
+
+/* Ensure charts don't overflow */
+.recharts-wrapper {
+  max-width: 100% !important;
+  overflow: hidden;
+}
+
+/* Mobile-specific chart adjustments */
+@media (max-width: 640px) {
+  .recharts-cartesian-axis-tick-value {
+    font-size: 8px !important;
+  }
+  
+  .recharts-tooltip-wrapper {
+    font-size: 10px !important;
+  }
+  
+  .recharts-legend-item-text {
+    font-size: 8px !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .recharts-cartesian-axis-tick-value {
+    font-size: 9px !important;
+  }
+  
+  .recharts-tooltip-wrapper {
+    font-size: 11px !important;
+  }
+}
+
+/* Card responsive improvements */
+.responsive-card {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.responsive-card-header {
+  padding: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .responsive-card-header {
+    padding: 1.5rem;
+  }
+}
+
+.responsive-card-content {
+  padding: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .responsive-card-content {
+    padding: 1.5rem;
+  }
+}

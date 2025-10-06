@@ -1,0 +1,791 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Theme Variables - Clean UI */
+  --brand-primary: #FF4747; /* Warm Red */
+  --brand-primary-dark: #FF6B6B;
+  --brand-primary-light: #FF6B6B;
+  --brand-orange: #FF6B6B;
+  --accent-red: #FF4747;
+  
+  /* Background Colors */
+  --bg-primary: #1A1A1A; /* Warm Charcoal */
+  --bg-secondary: #2C2C2C;
+  --bg-tertiary: #404040;
+  --bg-card: #242424; /* Darker Charcoal */
+  --bg-modal: #242424;
+  
+  /* Text Colors */
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A0;
+  --text-tertiary: #888888;
+  --text-disabled: #555555;
+  --text-inverse: #000000;
+  
+  /* Border Colors */
+  --border-primary: #333333;
+  --border-secondary: #444444;
+  --border-focus: #FF4747;
+  --border-error: #FF6B6B;
+  
+  /* Gradients (subtle/clean) */
+  --gradient-primary: linear-gradient(135deg, #FF4747 0%, #FF6B6B 100%);
+  --gradient-hero: linear-gradient(135deg, #1A1A1A 0%, #2C2C2C 100%);
+  --gradient-background: linear-gradient(180deg, #1A1A1A 0%, #1A1A1A 100%);
+  
+  /* Status Colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+  --neutral: #6B7280;
+  
+  /* Crypto Specific */
+  --profit: #10B981;
+  --loss: #EF4444;
+  --price-up: #16A34A;
+  --price-down: #DC2626;
+  --volume-bg: rgba(253, 29, 29, 0.1);
+  --chart-line: #FD1D1D;
+  
+  /* Opacity Variants */
+  --brand-10: rgba(255, 71, 71, 0.1);
+  --brand-20: rgba(255, 71, 71, 0.2);
+  --brand-30: rgba(255, 71, 71, 0.3);
+  --brand-50: rgba(255, 71, 71, 0.5);
+  --brand-70: rgba(255, 71, 71, 0.7);
+  --brand-90: rgba(255, 71, 71, 0.9);
+  
+  /* Animation/Glow - disabled for clean UI */
+  --glow-effect: none;
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --hover-glow: none;
+  
+  /* Component Colors */
+  --navbar-bg: rgba(0, 0, 0, 0.9);
+  --navbar-backdrop: rgba(0, 0, 0, 0.8);
+  --navbar-border: rgba(51, 51, 51, 0.3);
+  --footer-bg: #111111;
+  --footer-text: #888888;
+  --footer-links: #B3B3B3;
+  
+  /* Legacy CSS Variables for compatibility */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-modal);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand-primary);
+  --primary-foreground: var(--text-primary);
+  --secondary: var(--bg-tertiary);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-tertiary);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--brand-primary);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--error);
+  --destructive-foreground: var(--text-primary);
+  --border: var(--border-primary);
+  --input: var(--bg-tertiary);
+  --ring: var(--brand-primary);
+  --chart-1: var(--brand-primary);
+  --chart-2: var(--brand-orange);
+  --chart-3: var(--success);
+  --chart-4: var(--warning);
+  --chart-5: var(--info);
+  --radius: 0.625rem;
+  --sidebar: var(--bg-secondary);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: var(--text-primary);
+  --sidebar-accent: var(--bg-tertiary);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: var(--border-primary);
+  --sidebar-ring: var(--brand-primary);
+}
+
+.dark {
+  /* Dark mode uses the same crypto theme */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-modal);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand-primary);
+  --primary-foreground: var(--text-primary);
+  --secondary: var(--bg-tertiary);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-tertiary);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--brand-primary);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--error);
+  --destructive-foreground: var(--text-primary);
+  --border: var(--border-primary);
+  --input: var(--bg-tertiary);
+  --ring: var(--brand-primary);
+  --chart-1: var(--brand-primary);
+  --chart-2: var(--brand-orange);
+  --chart-3: var(--success);
+  --chart-4: var(--warning);
+  --chart-5: var(--info);
+  --sidebar: var(--bg-secondary);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: var(--text-primary);
+  --sidebar-accent: var(--bg-tertiary);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: var(--border-primary);
+  --sidebar-ring: var(--brand-primary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Base Styles */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    background: var(--bg-primary);
+    min-height: 100vh;
+  }
+  
+  html, body {
+    overflow-x: hidden;
+  }
+  
+  /* Crypto Theme Base Styles */
+  .crypto-gradient-bg { background: var(--bg-primary); }
+  
+  .crypto-hero-gradient { background: var(--bg-secondary); }
+  
+  .crypto-primary-gradient {
+    background: var(--gradient-primary);
+  }
+  
+  .crypto-glow { box-shadow: none; }
+  
+  .crypto-hover-glow:hover { box-shadow: none; }
+  
+  .crypto-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .crypto-card:hover { box-shadow: var(--box-shadow); transform: none; }
+  
+  .crypto-button-primary {
+    background: var(--brand-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--brand-primary);
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .crypto-button-primary:hover { background: var(--brand-primary-dark); box-shadow: none; transform: none; }
+  
+  .crypto-button-secondary {
+    background: transparent;
+    color: var(--brand-primary);
+    border: 1px solid var(--brand-primary);
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .crypto-button-secondary:hover { background: var(--brand-primary); color: var(--text-primary); box-shadow: none; }
+  
+  .crypto-button-ghost {
+    background: var(--brand-10);
+    color: var(--brand-primary);
+    border: 1px solid transparent;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .crypto-button-ghost:hover { background: var(--brand-20); box-shadow: none; }
+  
+  .crypto-input {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .crypto-input:focus { border-color: var(--brand-primary); box-shadow: none; outline: none; }
+  
+  .crypto-text-primary {
+    color: var(--text-primary);
+  }
+  
+  .crypto-text-secondary {
+    color: var(--text-secondary);
+  }
+  
+  .crypto-text-tertiary {
+    color: var(--text-tertiary);
+  }
+  
+  .crypto-profit {
+    color: var(--profit);
+  }
+  
+  .crypto-loss {
+    color: var(--loss);
+  }
+  
+  .crypto-price-up {
+    color: var(--price-up);
+  }
+  
+  .crypto-price-down {
+    color: var(--price-down);
+  }
+  
+  .crypto-navbar {
+    background: var(--navbar-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--navbar-border);
+  }
+  
+  .crypto-footer {
+    background: var(--footer-bg);
+    color: var(--footer-text);
+  }
+  
+  .crypto-footer a {
+    color: var(--footer-links);
+    transition: color 0.3s ease-in-out;
+  }
+  
+  .crypto-footer a:hover { color: var(--brand-primary); }
+  
+  /* Crypto Animations */
+  @keyframes crypto-pulse {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(253, 29, 29, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(253, 29, 29, 0.8);
+    }
+  }
+  
+  @keyframes crypto-glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 10px rgba(253, 29, 29, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 25px rgba(253, 29, 29, 0.6);
+    }
+  }
+  
+  @keyframes crypto-gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  @keyframes crypto-float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+  
+  @keyframes crypto-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  
+  /* Crypto Animation Classes */
+  .crypto-pulse { animation: none; }
+  
+  .crypto-glow-pulse { animation: none; }
+  
+  .crypto-gradient-animated { background-size: auto; animation: none; }
+  
+  .crypto-float {
+    animation: crypto-float 3s ease-in-out infinite;
+  }
+  
+  .crypto-shimmer { background: none; animation: none; }
+  
+  /* Enhanced Crypto Card Effects */
+  .crypto-card-enhanced {
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease-in-out;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .crypto-card-enhanced::before { content: none; }
+  .crypto-card-enhanced:hover { box-shadow: var(--box-shadow); transform: none; border-color: var(--border-primary); }
+  
+  /* Crypto Button Enhancements */
+  .crypto-button-enhanced { position: relative; overflow: hidden; background: var(--brand-primary); border: 1px solid var(--brand-primary); color: var(--text-primary); }
+  .crypto-button-enhanced::before { content: none; }
+  .crypto-button-enhanced:hover { box-shadow: none; transform: none; }
+  
+  /* Crypto Loading Spinner */
+  .crypto-spinner {
+    border: 3px solid var(--border-primary);
+    border-top: 3px solid var(--brand-primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: crypto-spin 1s linear infinite;
+  }
+  
+  @keyframes crypto-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Crypto Progress Bar */
+  .crypto-progress {
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .crypto-progress-bar {
+    background: var(--gradient-primary);
+    height: 100%;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .crypto-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-image: linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.2) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.2) 75%,
+      transparent 75%,
+      transparent
+    );
+    background-size: 50px 50px;
+    animation: crypto-progress-move 2s linear infinite;
+  }
+  
+  @keyframes crypto-progress-move {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 50px 50px;
+    }
+  }
+  
+  /* Crypto Status Indicators */
+  .crypto-status-online {
+    color: var(--profit);
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  }
+  
+  .crypto-status-offline {
+    color: var(--loss);
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  }
+  
+  .crypto-status-warning {
+    color: var(--warning);
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+  }
+  
+  /* Crypto Data Visualization */
+  .crypto-chart-line { stroke: var(--chart-line); stroke-width: 3; fill: none; filter: none; }
+  
+  .crypto-chart-area {
+    fill: url(#crypto-gradient);
+    opacity: 0.3;
+  }
+  
+  .crypto-chart-point { fill: var(--brand-primary); stroke: var(--text-primary); stroke-width: 2; filter: none; }
+  
+  /* Smooth scrolling for main content */
+  .overflow-y-auto {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom scrollbar styling */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+  
+  /* Ensure responsive containers */
+  .grid {
+    min-width: 0;
+  }
+  
+  /* Prevent chart overflow */
+  .recharts-wrapper {
+    max-width: 100%;
+  }
+  
+  /* Responsive text truncation */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+}
+
+/* Responsive Utilities */
+@layer utilities {
+  /* Mobile-first responsive text sizes */
+  .text-responsive-xs {
+    @apply text-xs sm:text-sm;
+  }
+  
+  .text-responsive-sm {
+    @apply text-sm sm:text-base;
+  }
+  
+  .text-responsive-base {
+    @apply text-base sm:text-lg;
+  }
+  
+  .text-responsive-lg {
+    @apply text-lg sm:text-xl;
+  }
+  
+  .text-responsive-xl {
+    @apply text-xl sm:text-2xl;
+  }
+  
+  .text-responsive-2xl {
+    @apply text-2xl sm:text-3xl lg:text-4xl;
+  }
+  
+  /* Responsive spacing */
+  .space-responsive {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8;
+  }
+  
+  .gap-responsive {
+    @apply gap-3 sm:gap-4 lg:gap-6;
+  }
+  
+  /* Responsive padding */
+  .p-responsive {
+    @apply p-3 sm:p-4 lg:p-6 xl:p-8;
+  }
+  
+  .px-responsive {
+    @apply px-3 sm:px-4 lg:px-6 xl:px-8;
+  }
+  
+  .py-responsive {
+    @apply py-3 sm:py-4 lg:py-6 xl:py-8;
+  }
+  
+  /* Responsive margins */
+  .m-responsive {
+    @apply m-3 sm:m-4 lg:m-6 xl:m-8;
+  }
+  
+  .mx-responsive {
+    @apply mx-3 sm:mx-4 lg:mx-6 xl:mx-8;
+  }
+  
+  .my-responsive {
+    @apply my-3 sm:my-4 lg:my-6 xl:my-8;
+  }
+  
+  /* Responsive grid layouts */
+  .grid-responsive {
+    @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5;
+  }
+  
+  .grid-responsive-compact {
+    @apply grid-cols-2 sm:grid-cols-3 lg:grid-cols-5;
+  }
+  
+  /* Responsive flex layouts */
+  .flex-responsive {
+    @apply flex-col sm:flex-row;
+  }
+  
+  .flex-responsive-reverse {
+    @apply flex-col-reverse sm:flex-row;
+  }
+  
+  /* Responsive width utilities */
+  .w-responsive {
+    @apply w-full sm:w-auto;
+  }
+  
+  .w-responsive-full {
+    @apply w-full sm:w-full lg:w-auto;
+  }
+  
+  /* Responsive height utilities */
+  .h-responsive {
+    @apply h-8 sm:h-10 lg:h-11;
+  }
+  
+  /* Responsive text alignment */
+  .text-responsive-center {
+    @apply text-center sm:text-left;
+  }
+  
+  .text-responsive-left {
+    @apply text-left sm:text-left;
+  }
+  
+  /* Responsive justify content */
+  .justify-responsive {
+    @apply justify-center sm:justify-start;
+  }
+  
+  .justify-responsive-end {
+    @apply justify-center sm:justify-end;
+  }
+  
+  /* Responsive items alignment */
+  .items-responsive {
+    @apply items-stretch sm:items-center;
+  }
+  
+  /* Responsive order utilities */
+  .order-responsive-1 {
+    @apply order-1 sm:order-1;
+  }
+  
+  .order-responsive-2 {
+    @apply order-2 sm:order-2;
+  }
+  
+  /* Responsive visibility */
+  .hidden-responsive {
+    @apply hidden sm:block;
+  }
+  
+  .block-responsive {
+    @apply block sm:hidden;
+  }
+  
+  /* Responsive border radius */
+  .rounded-responsive {
+    @apply rounded-lg sm:rounded-xl;
+  }
+  
+  /* Responsive shadows */
+  .shadow-responsive {
+    @apply shadow-sm sm:shadow-md lg:shadow-lg;
+  }
+  
+  /* Responsive transitions */
+  .transition-responsive {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  /* Responsive hover effects */
+  .hover-responsive {
+    @apply hover:shadow-md hover:scale-[1.01] transition-all duration-200;
+  }
+  
+  .hover-responsive-card {
+    @apply hover:shadow-lg hover:scale-[1.02] transition-all duration-300;
+  }
+}
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 640px) {
+  .mobile-only {
+    display: block;
+  }
+  
+  .desktop-only {
+    display: none;
+  }
+}
+
+@media (min-width: 641px) {
+  .mobile-only {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* Enhanced mobile experience */
+@media (max-width: 640px) {
+  /* Improve touch targets on mobile */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing for mobile */
+  .mobile-spacing {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+  
+  /* Improved mobile typography */
+  .mobile-text {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  /* Mobile-optimized cards */
+  .mobile-card {
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-optimized {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+  
+  .tablet-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+/* Desktop enhancements */
+@media (min-width: 1025px) {
+  .desktop-enhanced {
+    padding: 2rem;
+    gap: 2rem;
+  }
+  
+  .desktop-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+/* Large screen optimizations */
+@media (min-width: 1280px) {
+  .xl-optimized {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+}
+
+/* Crypto Glow Pulse Animation */
+@keyframes crypto-glow-pulse {
+  0% {
+    box-shadow: 
+      0 0 5px rgba(253, 29, 29, 0.3),
+      0 0 10px rgba(253, 29, 29, 0.2),
+      0 0 15px rgba(253, 29, 29, 0.1);
+  }
+  100% {
+    box-shadow: 
+      0 0 10px rgba(253, 29, 29, 0.5),
+      0 0 20px rgba(253, 29, 29, 0.3),
+      0 0 30px rgba(253, 29, 29, 0.2);
+  }
+}
+
+.crypto-glow-pulse {
+  animation: crypto-glow-pulse 2s ease-in-out infinite alternate;
+}
+
+@media (min-width: 1536px) {
+  .xxl-optimized {
+    max-width: 1536px;
+    margin: 0 auto;
+  }
+}
