@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import useGoogleAuth from '@/hooks/auth/useGoogleAuth';
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { handleGoogleCallback, isLoading, error } = useGoogleAuth();
@@ -112,5 +112,22 @@ export default function GoogleCallbackPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
+        <Card className="shadow-lg crypto-card">
+          <CardContent className="text-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
+            <p className="crypto-text-secondary">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }
