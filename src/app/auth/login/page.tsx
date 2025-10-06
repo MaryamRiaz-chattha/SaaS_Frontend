@@ -90,19 +90,55 @@ function LoginContent() {
     router.prefetch('/dashboard')
   }, [router])
 
+  // If a token already exists in localStorage, redirect immediately
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const token = localStorage.getItem('auth_token')
+    if (!token) return
+    // Ensure minimal user_data exists so hooks relying on it don't block redirect
+    const userData = localStorage.getItem('user_data')
+    if (!userData) {
+      const minimalUser = {
+        id: 'user',
+        email: '',
+        username: '',
+        full_name: '',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      try { localStorage.setItem('user_data', JSON.stringify(minimalUser)) } catch {}
+    }
+    router.replace('/dashboard')
+  }, [router])
+
   // Handle Google callback that redirects back to this login page with an access token in the URL
   useEffect(() => {
     // Avoid running on server
     if (typeof window === 'undefined') return
 
     const tokenFromUrl = searchParams.get('access_token') || searchParams.get('token')
+    const successFromUrl = searchParams.get('success')
+    const userFromUrl = searchParams.get('user')
+    const emailFromUrl = searchParams.get('email')
     if (!tokenFromUrl) return
 
     // Save token to localStorage to align with existing auth storage
     try {
       localStorage.setItem('auth_token', tokenFromUrl)
-      // Optional: mark that user data is missing so other flows can populate later if needed
-      // We deliberately do not set `user_data` here to avoid assumptions about user shape
+      // Save minimal user data if provided to satisfy UI immediately
+      if (userFromUrl || emailFromUrl) {
+        const minimalUser = {
+          id: userFromUrl || emailFromUrl || 'user',
+          email: emailFromUrl || '',
+          username: userFromUrl || '',
+          full_name: userFromUrl || '',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+        localStorage.setItem('user_data', JSON.stringify(minimalUser))
+      }
     } catch {
       // No-op: if storage fails, continue to normal login flow
     }
@@ -120,6 +156,9 @@ function LoginContent() {
     // Redirect to dashboard; background flows can later fetch and populate user info
     router.replace('/dashboard')
   }, [searchParams, router])
+
+  // Prevent UI flash: if token present in URL, show loader instead of form until redirect
+  const hasOauthToken = !!(typeof window !== 'undefined' && (searchParams.get('access_token') || searchParams.get('token')))
 
   // If already authenticated: immediately redirect to dashboard (no loader flicker)
   useEffect(() => {
@@ -149,6 +188,13 @@ function LoginContent() {
   return (
       <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        {hasOauthToken ? (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-5 w-5 animate-spin mr-2" />
+            <span>Signing you in...</span>
+          </div>
+        ) : (
+        <>
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2 group">
@@ -251,6 +297,8 @@ function LoginContent() {
             ← Back to home
           </Link>
         </div>
+        </>
+        )}
       </div>
       </div>
   )
