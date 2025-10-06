@@ -24,52 +24,53 @@ A comprehensive YouTube content management platform built with Next.js 15, React
 ## 🏗️ Project Structure
 
 ```
-├── app/                          # Next.js App Router
-│   ├── auth/                     # Authentication pages
-│   │   ├── login/               # User login
-│   │   ├── signup/              # User registration
-│   │   ├── credential/          # API credentials setup
-│   │   └── youtube-connect/     # YouTube OAuth connection
-│   ├── dashboard/               # Main dashboard
-│   │   ├── videos/              # Video management
-│   │   ├── playlists/           # Playlist management
-│   │   ├── upload/              # Video upload interface
-│   │   └── user-settings/       # User settings
-│   ├── youtube-studio-dashboard/ # YouTube Studio clone
-│   │   ├── Analytics/           # Analytics interface
-│   │   ├── content/             # Content management
-│   │   ├── Community/           # Community features
-│   │   ├── Earn/                # Monetization tools
-│   │   └── [other studio features]/
-│   ├── feature-showcase/        # Feature showcase
-│   ├── about-page/              # About page
-│   └── globals.css              # Global styles
-├── components/                   # Reusable UI components
-│   ├── landing-page-components/ # Landing page components
-│   ├── dashboard/               # Dashboard-specific components
-│   │   ├── overview/            # Dashboard overview
-│   │   ├── videos/              # Video components
-│   │   └── youtube-videos/      # YouTube video components
-│   ├── upload/                  # Upload workflow components
-│   │   ├── sections/            # Upload step sections
-│   │   └── ui/                  # Upload UI components
-│   └── ui/                      # Shadcn/ui components
-├── hooks/                       # Custom React hooks
-│   ├── auth/                    # Authentication hooks
-│   ├── ai/                      # AI integration hooks
-│   ├── youtube/                 # YouTube API hooks
-│   ├── dashboard/               # Dashboard data hooks
-│   │   ├── overview/            # Dashboard overview hooks
-│   │   ├── videos/              # Video management hooks
-│   │   └── playlists/           # Playlist hooks
-│   ├── upload/                  # Upload workflow hooks
-│   └── common/                  # Shared utility hooks
-├── types/                       # TypeScript type definitions
-│   ├── dashboard/               # Dashboard types
-│   └── upload.ts                # Upload types
-├── lib/                         # Utility libraries
-├── styles/                      # Additional stylesheets
-└── public/                      # Static assets
+├── src/
+│   ├── app/                          # Next.js App Router
+│   │   ├── auth/                     # Authentication pages
+│   │   │   ├── login/               # User login
+│   │   │   ├── signup/              # User registration
+│   │   │   ├── credential/          # API credentials setup
+│   │   │   └── youtube-connect/     # YouTube OAuth connection
+│   │   ├── dashboard/               # Main dashboard
+│   │   │   ├── videos/              # Video management
+│   │   │   ├── playlists/           # Playlist management
+│   │   │   ├── upload/              # Video upload interface
+│   │   │   └── user-settings/       # User settings
+│   │   ├── youtube-studio-dashboard/ # YouTube Studio clone
+│   │   │   ├── Analytics/           # Analytics interface
+│   │   │   ├── content/             # Content management
+│   │   │   ├── Community/           # Community features
+│   │   │   ├── Earn/                # Monetization tools
+│   │   │   └── [other studio features]/
+│   │   ├── feature-showcase/        # Feature showcase
+│   │   ├── about-page/              # About page
+│   │   └── globals.css              # Global styles
+│   ├── components/                   # Reusable UI components
+│   │   ├── landing-page-components/ # Landing page components
+│   │   ├── dashboard/               # Dashboard-specific components
+│   │   │   ├── overview/            # Dashboard overview
+│   │   │   ├── videos/              # Video components
+│   │   │   └── youtube-videos/      # YouTube video components
+│   │   ├── upload/                  # Upload workflow components
+│   │   │   ├── sections/            # Upload step sections
+│   │   │   └── ui/                  # Upload UI components
+│   │   └── ui/                      # Shadcn/ui components
+│   ├── lib/                          # Libraries, utils, and hooks
+│   │   ├── hooks/                    # Custom React hooks (moved here)
+│   │   │   ├── auth/                # Authentication hooks
+│   │   │   ├── ai/                  # AI integration hooks
+│   │   │   ├── youtube/             # YouTube API hooks
+│   │   │   ├── dashboard/           # Dashboard data hooks
+│   │   │   ├── upload/              # Upload workflow hooks
+│   │   │   └── common/              # Shared utility hooks
+│   │   ├── auth.ts                   # Auth utilities
+│   │   └── utils.ts                  # Common utilities
+│   ├── types/                         # TypeScript type definitions
+│   │   ├── dashboard/                 # Dashboard types
+│   │   └── upload.ts                  # Upload types
+│   └── styles/                        # Additional stylesheets
+├── public/                            # Static assets
+└── scripts/                           # Dev scripts (e.g., import updaters)
 ```
 
 ## 🛠️ Technology Stack
@@ -139,6 +140,12 @@ A comprehensive YouTube content management platform built with Next.js 15, React
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 🔧 Configuration
+
+### Path Aliases
+- The project uses an absolute import alias: `@/*` → `src/*` (configured in `tsconfig.json`).
+- Examples:
+  - `import { Button } from '@/components/ui/button'`
+  - `import useAuth from '@/lib/hooks/auth/useAuth'`
 
 ### YouTube API Setup
 1. Create a project in Google Cloud Console
@@ -245,3 +252,4 @@ For support and questions:
 ---
 
 **Built with ❤️ by Abdul Hannan**
+# Updated for main branch deployment
