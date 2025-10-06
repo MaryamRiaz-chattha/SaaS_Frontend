@@ -26,6 +26,9 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const load = async () => {
+      // Only run on client side
+      if (typeof window === 'undefined') return
+      
       try {
         const res: any = await getGeminiKey()
         if (res?.api_key_preview) {

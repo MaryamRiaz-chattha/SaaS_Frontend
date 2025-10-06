@@ -143,13 +143,6 @@ export default function DashboardOverview() {
           )}
         </div>
 
-        {/* Growth Insights Chart */}
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-6">
-          {overviewData.growth_insights && (
-            <GrowthInsightsChart growthInsights={overviewData.growth_insights} />
-          )}
-        </div>
-
         {/* Top Videos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Top Video by Views */}
@@ -166,6 +159,13 @@ export default function DashboardOverview() {
               video={overviewData.top_performance_content.top_video_by_likes} 
               type="likes" 
             />
+          )}
+        </div>
+
+        {/* Growth Insights Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-6">
+          {overviewData.growth_insights && (
+            <GrowthInsightsChart growthInsights={overviewData.growth_insights} />
           )}
         </div>
       </div>
