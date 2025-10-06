@@ -5,7 +5,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import type { AxiosError } from "axios"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,6 +25,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const { checkYouTubeCredentials } = useYouTubeCredentials()
   const { toast } = useToast()
@@ -86,6 +87,37 @@ export default function LoginPage() {
   useEffect(() => {
     router.prefetch('/dashboard')
   }, [router])
+
+  // Handle Google callback that redirects back to this login page with an access token in the URL
+  useEffect(() => {
+    // Avoid running on server
+    if (typeof window === 'undefined') return
+
+    const tokenFromUrl = searchParams.get('access_token') || searchParams.get('token')
+    if (!tokenFromUrl) return
+
+    // Save token to localStorage to align with existing auth storage
+    try {
+      localStorage.setItem('auth_token', tokenFromUrl)
+      // Optional: mark that user data is missing so other flows can populate later if needed
+      // We deliberately do not set `user_data` here to avoid assumptions about user shape
+    } catch {
+      // No-op: if storage fails, continue to normal login flow
+    }
+
+    // Clean query params from URL (remove token)
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('access_token')
+      url.searchParams.delete('token')
+      window.history.replaceState({}, '', url.toString())
+    } catch {
+      // ignore URL cleanup errors
+    }
+
+    // Redirect to dashboard; background flows can later fetch and populate user info
+    router.replace('/dashboard')
+  }, [searchParams, router])
 
   // If already authenticated: immediately redirect to dashboard (no loader flicker)
   useEffect(() => {

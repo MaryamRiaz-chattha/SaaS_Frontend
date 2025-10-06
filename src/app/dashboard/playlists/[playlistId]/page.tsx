@@ -235,63 +235,63 @@ export default function PlaylistVideosPage() {
             <div>
               <h2 className="text-xl font-bold crypto-profit mb-4">Playlist Overview</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+                <Card className="shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2 text-gray-600">
-                      <Eye className="w-4 h-4 crypto-profit" />
+                    <CardTitle className="text-sm flex items-center gap-2 text-white">
+                      <Eye className="w-4 h-4 text-white" />
                       Total Views
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{analytics.total_views.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-white">{analytics.total_views.toLocaleString()}</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+                <Card className="shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2 text-gray-600">
-                      <ThumbsUp className="w-4 h-4 text-blue-600" />
+                    <CardTitle className="text-sm flex items-center gap-2 text-white">
+                      <ThumbsUp className="w-4 h-4 text-white" />
                       Total Likes
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{analytics.total_likes.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-white">{analytics.total_likes.toLocaleString()}</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+                <Card className="shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2 text-gray-600">
-                      <MessageCircle className="w-4 h-4 text-purple-600" />
+                    <CardTitle className="text-sm flex items-center gap-2 text-white">
+                      <MessageCircle className="w-4 h-4 text-white" />
                       Comments
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{analytics.total_comments.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-white">{analytics.total_comments.toLocaleString()}</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+                <Card className="shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2 text-gray-600">
-                      <Video className="w-4 h-4 text-orange-600" />
+                    <CardTitle className="text-sm flex items-center gap-2 text-white">
+                      <Video className="w-4 h-4 text-white" />
                       Videos
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{analytics.total_videos}</div>
+                    <div className="text-2xl font-bold text-white">{analytics.total_videos}</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+                <Card className="shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2 text-gray-600">
-                      <Clock className="w-4 h-4 text-gray-700" />
+                    <CardTitle className="text-sm flex items-center gap-2 text-white">
+                      <Clock className="w-4 h-4 text-white" />
                       Watch time (hrs)
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{analytics.total_watch_time_hours.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-white">{analytics.total_watch_time_hours.toFixed(2)}</div>
                   </CardContent>
                 </Card>
               </div>
@@ -302,26 +302,26 @@ export default function PlaylistVideosPage() {
               {/* Playlist Health */}
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Playlist Health</CardTitle>
+                  <CardTitle className="text-lg text-white">Playlist Health</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Health Score</span>
-                      <span className="text-2xl font-bold">{analytics.playlist_health.health_score}</span>
+                      <span className="text-sm font-medium text-white">Health Score</span>
+                      <span className="text-2xl font-bold text-white">{analytics.playlist_health.health_score}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Health Level</span>
+                      <span className="text-sm text-white">Health Level</span>
                       <Badge className={getHealthColor(analytics.playlist_health.health_level)}>
                         {analytics.playlist_health.health_level}
                       </Badge>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      <div className="font-medium mb-1">Health Factors:</div>
-                      {analytics.playlist_health.health_factors.map((factor, index) => (
+                    <div className="text-xs text-white/80">
+                      <div className="font-medium mb-1 text-white">Health Factors:</div>
+                      {analytics.playlist_health.health_factors.map((factor: string, index: number) => (
                         <div key={index} className="flex items-start gap-2">
-                          <div className="w-1 h-1 bg-blue-500 rounded-full mt-2"></div>
-                          <span>{factor}</span>
+                          <div className="w-1 h-1 bg-white rounded-full mt-2"></div>
+                          <span className="text-white/90">{factor}</span>
                         </div>
                       ))}
                     </div>
@@ -332,31 +332,31 @@ export default function PlaylistVideosPage() {
               {/* Growth Metrics */}
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Growth Metrics</CardTitle>
+                  <CardTitle className="text-lg text-white">Growth Metrics</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
-                      <span>Growth Trend</span>
+                      <span className="text-white">Growth Trend</span>
                       <Badge variant={analytics.growth_metrics.growth_trend === "increasing" ? "default" : "secondary"}>
                         {analytics.growth_metrics.growth_trend}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span>Views Growth</span>
-                      <span className={analytics.growth_metrics.avg_views_growth >= 0 ? "crypto-profit" : "crypto-loss"}>
+                      <span className="text-white">Views Growth</span>
+                      <span className={analytics.growth_metrics.avg_views_growth >= 0 ? "text-white" : "text-white"}>
                         {analytics.growth_metrics.avg_views_growth.toFixed(1)}%
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Engagement Growth</span>
-                      <span className={analytics.growth_metrics.avg_engagement_growth >= 0 ? "crypto-profit" : "crypto-loss"}>
+                      <span className="text-white">Engagement Growth</span>
+                      <span className={analytics.growth_metrics.avg_engagement_growth >= 0 ? "text-white" : "text-white"}>
                         {analytics.growth_metrics.avg_engagement_growth.toFixed(1)}%
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Consistency Score</span>
-                      <span className="text-blue-600">{analytics.growth_metrics.consistency_score.toFixed(1)}</span>
+                      <span className="text-white">Consistency Score</span>
+                      <span className="text-white">{analytics.growth_metrics.consistency_score.toFixed(1)}</span>
                     </div>
                   </div>
                 </CardContent>

@@ -144,61 +144,61 @@ function PlaylistData({ playlistId }: { playlistId: string }) {
         </div>
       </div>
 
-      {/* Main Info */}
-            <Card className="border-2 border-primary/20">
-              <CardContent className="p-6">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 lg:gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Eye className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                <div className="font-medium">{asNumber(playlist.total_views).toLocaleString()}</div>
-                          <div className="text-muted-foreground text-xs">total views</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <ThumbsUp className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                <div className="font-medium">{asNumber(playlist.total_likes).toLocaleString()}</div>
-                          <div className="text-muted-foreground text-xs">total likes</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                <div className="font-medium">{asNumber(playlist.total_comments).toLocaleString()}</div>
-                          <div className="text-muted-foreground text-xs">comments</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Video className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                <div className="font-medium">{asNumber(playlist.total_videos)}</div>
-                          <div className="text-muted-foreground text-xs">videos</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                <div className="font-medium">{asNumber(playlist.total_watch_time_hours).toFixed(2)}</div>
-                          <div className="text-muted-foreground text-xs">watch time (hrs)</div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Main Info (use dashboard key stats style) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-base truncate text-white">Total Views</CardTitle>
+            <CardDescription className="text-xs text-white/80">Playlist lifetime views</CardDescription>
+          </CardHeader>
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="text-lg sm:text-3xl font-bold text-white">{asNumber(playlist.total_views).toLocaleString()}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-base truncate text-white">Total Likes</CardTitle>
+            <CardDescription className="text-xs text-white/80">All likes on videos</CardDescription>
+          </CardHeader>
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="text-lg sm:text-3xl font-bold text-white">{asNumber(playlist.total_likes).toLocaleString()}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-base truncate text-white">Comments</CardTitle>
+            <CardDescription className="text-xs text-white/80">Total comments</CardDescription>
+          </CardHeader>
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="text-lg sm:text-3xl font-bold text-white">{asNumber(playlist.total_comments).toLocaleString()}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-base truncate text-white">Total Videos</CardTitle>
+            <CardDescription className="text-xs text-white/80">Videos in playlist</CardDescription>
+          </CardHeader>
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="text-lg sm:text-3xl font-bold text-white">{asNumber(playlist.total_videos)}</div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
               <Card>
                 <CardContent className="p-3 lg:p-4">
                   <div className="flex items-center gap-2 mb-2">
-              <div className="h-3 w-3 lg:h-4 lg:w-4 text-blue-500" />
-                    <div className="text-xs lg:text-sm text-muted-foreground">Health Score</div>
+              <div className="h-3 w-3 lg:h-4 lg:w-4 bg-white rounded-sm" />
+                    <div className="text-xs lg:text-sm text-white/80">Health Score</div>
                   </div>
-            <div className={`text-lg lg:text-2xl font-bold ${healthColor(playlist.playlist_health?.health_level)}`}>
+            <div className={`text-lg lg:text-2xl font-bold text-white`}>
               {asNumber(playlist.playlist_health?.health_score)}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-xs text-white/80 mt-1">
               {playlist.playlist_health?.health_level || "—"}
                   </div>
                 </CardContent>
@@ -207,26 +207,26 @@ function PlaylistData({ playlistId }: { playlistId: string }) {
               <Card>
                 <CardContent className="p-3 lg:p-4">
                   <div className="flex items-center gap-2 mb-2">
-              <div className="h-3 w-3 lg:h-4 lg:w-4 crypto-profit" />
-                    <div className="text-xs lg:text-sm text-muted-foreground">Performance</div>
+              <div className="h-3 w-3 lg:h-4 lg:w-4 bg-white rounded-sm" />
+                    <div className="text-xs lg:text-sm text-white/80">Performance</div>
                   </div>
-                  <div className="text-lg lg:text-2xl font-bold crypto-profit">
+                  <div className="text-lg lg:text-2xl font-bold text-white">
               {asNumber(playlist.performance_score).toLocaleString()}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">Overall Score</div>
+                  <div className="text-xs text-white/80 mt-1">Overall Score</div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="p-3 lg:p-4">
                   <div className="flex items-center gap-2 mb-2">
-              <div className="h-3 w-3 lg:h-4 lg:w-4 text-purple-500" />
-                    <div className="text-xs lg:text-sm text-muted-foreground">Avg Duration</div>
+              <div className="h-3 w-3 lg:h-4 lg:w-4 bg-white rounded-sm" />
+                    <div className="text-xs lg:text-sm text-white/80">Avg Duration</div>
                   </div>
-                  <div className="text-lg lg:text-2xl font-bold text-purple-600">
+                  <div className="text-lg lg:text-2xl font-bold text-white">
               {asNumber(playlist.avg_duration_minutes).toFixed(2)}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">minutes per video</div>
+                  <div className="text-xs text-white/80 mt-1">minutes per video</div>
                 </CardContent>
               </Card>
 
@@ -234,12 +234,12 @@ function PlaylistData({ playlistId }: { playlistId: string }) {
                 <CardContent className="p-3 lg:p-4">
                   <div className="flex items-center gap-2 mb-2">
               {growthIcon(playlist.growth_metrics?.growth_trend)}
-                    <div className="text-xs lg:text-sm text-muted-foreground">Consistency</div>
+                    <div className="text-xs lg:text-sm text-white/80">Consistency</div>
                   </div>
-                  <div className="text-lg lg:text-2xl font-bold text-blue-600">
+                  <div className="text-lg lg:text-2xl font-bold text-white">
               {asNumber(playlist.growth_metrics?.consistency_score).toFixed(1)}%
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1 truncate">
+                  <div className="text-xs text-white/80 mt-1 truncate">
               Growth: {playlist.growth_metrics?.growth_trend || "—"}
                   </div>
                 </CardContent>
@@ -304,16 +304,16 @@ function PlaylistData({ playlistId }: { playlistId: string }) {
                       <h4 className="font-semibold text-sm line-clamp-2">{v.title}</h4>
                       <div className="grid grid-cols-3 gap-2 text-xs">
                         <div className="text-center">
-                          <div className="font-medium">{v.view_count.toLocaleString()}</div>
-                          <div className="text-muted-foreground">Views</div>
+                          <div className="font-medium text-white">{v.view_count.toLocaleString()}</div>
+                          <div className="text-white">Views</div>
                         </div>
                         <div className="text-center">
-                          <div className="font-medium">{v.like_count}</div>
-                          <div className="text-muted-foreground">Likes</div>
+                          <div className="font-medium text-white">{v.like_count}</div>
+                          <div className="text-white">Likes</div>
                         </div>
                         <div className="text-center">
-                          <div className="font-medium">{v.comment_count}</div>
-                          <div className="text-muted-foreground">Comments</div>
+                          <div className="font-medium text-white">{v.comment_count}</div>
+                          <div className="text-white">Comments</div>
                         </div>
                       </div>
                       <div className="flex gap-2">

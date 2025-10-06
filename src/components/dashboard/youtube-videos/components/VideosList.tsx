@@ -83,9 +83,18 @@ export default function VideosList({ videos, viewMode, hasMore, isLoadingMore, o
               {/* Thumbnail */}
               <div className="relative flex-shrink-0 w-full lg:w-48">
                 <img
-                  src={video.thumbnail_url || "/placeholder.svg"}
+                  src={`https://img.youtube.com/vi/${video.video_id}/maxresdefault.jpg`}
                   alt={video.title}
                   className="w-full lg:w-48 h-32 lg:h-28 object-cover rounded-lg"
+                  onError={(e) => {
+                    const img = e.currentTarget as HTMLImageElement
+                    if (!img.dataset.fallback) {
+                      img.dataset.fallback = 'hq'
+                      img.src = `https://img.youtube.com/vi/${video.video_id}/hqdefault.jpg`
+                    } else {
+                      img.src = '/placeholder.jpg'
+                    }
+                  }}
                 />
                 <div className="absolute bottom-2 right-2 bg-black/80 text-white px-2 py-1 rounded text-xs">
                   {safeFormatDuration(video.duration)}

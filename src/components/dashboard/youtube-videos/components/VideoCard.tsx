@@ -26,15 +26,32 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   // Using utility functions from lib/utils.ts
 
+  const getThumbnailUrl = () => {
+    if (video.thumbnail_url && !video.thumbnail_url.includes('i9.ytimg.com')) {
+      return video.thumbnail_url
+    }
+    return `https://img.youtube.com/vi/${video.video_id}/maxresdefault.jpg`
+  }
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 hover:scale-[1.02] h-full flex flex-col group">
       <CardContent className="p-0 flex flex-col h-full">
         {/* Thumbnail Section */}
         <div className="relative">
           <img
-            src={video.thumbnail_url || "/placeholder.svg"}
+            src={getThumbnailUrl()}
             alt={video.title}
             className="w-full h-40 sm:h-44 lg:h-40 xl:h-44 2xl:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              const img = e.currentTarget as HTMLImageElement
+              // First fallback to HQ default, then to placeholder
+              if (!img.dataset.fallback) {
+                img.dataset.fallback = 'hq'
+                img.src = `https://img.youtube.com/vi/${video.video_id}/hqdefault.jpg`
+              } else {
+                img.src = '/placeholder.jpg'
+              }
+            }}
           />
           
           {/* Status Badge */}
