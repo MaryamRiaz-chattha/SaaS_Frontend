@@ -66,7 +66,7 @@ export function DashboardHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full flex-shrink-0">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+                  <AvatarImage src="/hello.jpeg" alt="User" />
                   <AvatarFallback>{getUserInitials()}</AvatarFallback>
                 </Avatar>
               </Button>
@@ -84,7 +84,7 @@ export function DashboardHeader() {
                 <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/Settings" className="flex items-center">
+                <Link href="/dashboard/user-settings" className="flex items-center">
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </Link>

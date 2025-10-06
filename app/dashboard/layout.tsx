@@ -26,7 +26,7 @@ export default function DashboardLayout({
         '/dashboard/upload': 'Upload Video',
         '/dashboard/videos': 'YouTube Videos',
         '/dashboard/playlists': 'YouTube Playlists',
-        '/dashboard/Settings': 'Settings',
+        '/dashboard/user-settings': 'Settings',
         '/youtube-studio-dashboard': 'YouTube Studio',
       }
       
