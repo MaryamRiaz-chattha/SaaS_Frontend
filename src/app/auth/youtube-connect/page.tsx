@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Play, Youtube, Loader2, CheckCircle, AlertCircle, ExternalLink, RefreshCw, LogOut } from "lucide-react"
+import { Play, Youtube, Loader2, ExternalLink, RefreshCw, LogOut } from "lucide-react"
 import useCredential from "@/lib/hooks/ai/useCredential"
 import useYouTubeCredentials from "@/lib/hooks/youtube/useYouTubeCredentials"
 import { useAuth } from "@/lib/hooks/auth"
@@ -39,7 +39,6 @@ export default function YouTubeConnectPage() {
     lastChecked
   } = useYouTubeCredentials()
 
-  // Helper: poll token status until valid or timeout
   useEffect(() => {
     let timer: any
     let attempts = 0
@@ -91,15 +90,15 @@ export default function YouTubeConnectPage() {
       }
 
       const tokenResponse = await createYouTubeToken()
-      openAuthUrl(tokenResponse.auth_url)
-      // polling starts via effect when authUrl is set
+      if (tokenResponse.auth_url) {
+        openAuthUrl(tokenResponse.auth_url)
+      }
     } catch (err: any) {
     } finally {
       setIsConnecting(false)
     }
   }
 
-  // On mount: auto-connect flow
   useEffect(() => {
     (async () => {
       try {
@@ -130,10 +129,7 @@ export default function YouTubeConnectPage() {
   if (isLoadingAny) {
     return (
       <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
-        <div className="flex items-center gap-3 text-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>{redirecting ? 'Redirecting...' : isPolling ? 'Waiting for authorization...' : isLoading ? 'Creating OAuth token...' : isConnecting ? 'Connecting to YouTube...' : 'Loading...'}</span>
-        </div>
+        <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     )
   }
@@ -141,7 +137,6 @@ export default function YouTubeConnectPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-3 sm:p-4 lg:p-6">
       <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl">
-        {/* Logo */}
         <div className="text-center mb-6 sm:mb-8">
           <Link href="/" className="inline-flex items-center space-x-2 group">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center group-hover:opacity-90 transition-opacity crypto-primary-gradient crypto-glow">
@@ -160,29 +155,13 @@ export default function YouTubeConnectPage() {
               Connect Your YouTube Channel
             </CardTitle>
             <CardDescription className="text-sm sm:text-base">
-              We will connect your YouTube account and bring you to the dashboard automatically
+              
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
 
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <div className="space-y-2">
-                  <p>🔗 Connecting your YouTube account...</p>
-                  <p className="text-sm text-muted-foreground">
-                    If the popup is blocked, click the button below to open it.
-                  </p>
-                </div>
-              </AlertDescription>
-            </Alert>
-
-            {/* Auth URL Controls */}
             {authUrl && (
               <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  OAuth URL ready. If the window didn't open automatically, click below:
-                </p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -195,7 +174,6 @@ export default function YouTubeConnectPage() {
               </div>
             )}
 
-            {/* Retry Button */}
             {(error || credentialsError) && (
               <Button
                 onClick={handleRetry}
@@ -210,7 +188,7 @@ export default function YouTubeConnectPage() {
 
             <div className="text-center">
               <p className="text-xs text-muted-foreground">
-                By connecting, you agree to YouTube's Terms of Service and our Privacy Policy
+                
               </p>
             </div>
           </CardContent>

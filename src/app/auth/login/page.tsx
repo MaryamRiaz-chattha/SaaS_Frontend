@@ -31,12 +31,9 @@ function LoginContent() {
   const { login, isAuthenticated } = useAuth()
   const { toast } = useToast()
 
-  const renderFullScreenLoader = (text: string) => (
+  const renderFullScreenLoader = () => (
     <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
-      <div className="flex items-center gap-3 text-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" />
-        <span>{text}</span>
-      </div>
+      <Loader2 className="h-6 w-6 animate-spin" />
     </div>
   )
 
@@ -71,7 +68,6 @@ function LoginContent() {
     router.prefetch('/auth/youtube-connect')
   }, [router])
 
-  // If a token already exists, immediately route to connect with loader
   useEffect(() => {
     if (typeof window === 'undefined') return
     const token = localStorage.getItem('auth_token')
@@ -88,7 +84,6 @@ function LoginContent() {
     router.replace('/auth/youtube-connect')
   }, [router])
 
-  // Handle Google callback variants that pass token directly in URL
   useEffect(() => {
     if (typeof window === 'undefined') return
     const tokenFromUrl = searchParams.get('access_token') || searchParams.get('token')
@@ -125,7 +120,6 @@ function LoginContent() {
 
   const hasOauthToken = !!(typeof window !== 'undefined' && (searchParams.get('access_token') || searchParams.get('token')))
 
-  // If already authenticated, go to connect page which will decide final destination
   useEffect(() => {
     const run = async () => {
       if (!isAuthenticated) return
@@ -136,7 +130,7 @@ function LoginContent() {
   }, [isAuthenticated, router])
 
   if (isSubmitting || hasOauthToken || redirecting) {
-    return renderFullScreenLoader('Signing you in...')
+    return renderFullScreenLoader()
   }
 
   return (
@@ -253,7 +247,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4"><div className="flex items-center gap-3 text-foreground"><Loader2 className="h-5 w-5 animate-spin" /><span>Loading...</span></div></div>}>
+    <Suspense fallback={<div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
       <LoginContent />
     </Suspense>
   )
