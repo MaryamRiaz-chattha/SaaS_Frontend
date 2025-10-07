@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import axios from 'axios'
 import useAuth from '../auth/useAuth'
-import { useToast } from '../common/useToast'
 
 export interface YouTubeTokenResponse {
   message: string
@@ -81,7 +80,6 @@ youtubeApi.interceptors.response.use(
 
 export default function useCredential() {
   const { getAuthHeaders, user } = useAuth()
-  const { toast } = useToast()
   const [tokenState, setTokenState] = useState<YouTubeTokenState>({
     isLoading: false,
     error: null,
@@ -116,7 +114,6 @@ export default function useCredential() {
     }))
     
     try {
-      // Get authentication headers
       const authHeaders = getAuthHeaders()
       console.log('🔑 Using auth headers for YouTube token creation:', { hasToken: !!authHeaders.Authorization })
       
@@ -132,25 +129,38 @@ export default function useCredential() {
         },
       })
       
+      const { message, auth_url, instructions } = response.data || {}
       console.log('✅ YouTube token creation successful:', {
-        message: response.data.message,
-        hasAuthUrl: !!response.data.auth_url,
-        instructions: response.data.instructions,
+        message,
+        hasAuthUrl: !!auth_url,
+        instructions,
       })
+
+      if (!auth_url || typeof auth_url !== 'string') {
+        const missingUrlMessage = 'Authorization URL was not provided by the server.'
+        setTokenState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: missingUrlMessage,
+          authUrl: null,
+          message: message || null,
+        }))
+        return { message: message || missingUrlMessage, auth_url: '', instructions: instructions || '' }
+      }
       
       // Update state with response data
       setTokenState(prev => ({
         ...prev,
         isLoading: false,
         error: null,
-        authUrl: response.data.auth_url,
-        message: response.data.message,
+        authUrl: auth_url,
+        message: message || null,
       }))
       
-      console.log('🔗 Auth URL received:', response.data.auth_url)
-      console.log('📋 Instructions:', response.data.instructions)
+      console.log('🔗 Auth URL received:', auth_url)
+      console.log('📋 Instructions:', instructions)
       
-      return response.data
+      return { message: message || '', auth_url, instructions: instructions || '' }
       
     } catch (error: any) {
       console.error('❌ YouTube token creation failed:', error)
@@ -180,7 +190,6 @@ export default function useCredential() {
         console.error('📋 Custom error message:', error.message)
       }
       
-      // Update state with error
       setTokenState(prev => ({
         ...prev,
         isLoading: false,
@@ -197,16 +206,16 @@ export default function useCredential() {
     console.log('🌐 Opening YouTube OAuth URL in new window...')
     console.log('🔗 Auth URL:', authUrl)
     
+    if (!authUrl || typeof authUrl !== 'string') {
+      console.error('❌ Cannot open OAuth window - invalid or missing URL')
+      throw new Error('Authorization URL is missing. Please try again.')
+    }
+
     try {
-      // Open the OAuth URL in a new window
       const authWindow = window.open(authUrl, 'youtube_oauth', 'width=600,height=700,scrollbars=yes,resizable=yes')
       
       if (authWindow) {
         console.log('✅ OAuth window opened successfully')
-        
-        // Store the window reference for potential future use
-        // You might want to add logic to handle the OAuth callback here
-        
         return authWindow
       } else {
         console.error('❌ Failed to open OAuth window - popup blocked?')
@@ -235,7 +244,6 @@ export default function useCredential() {
 
   const getYouTubeToken = useCallback(async (): Promise<YouTubeToken | undefined> => {
     if (!userId) {
-      toast({ title: 'Missing user', description: 'No user id found. Please log in.' })
       return
     }
 
@@ -247,7 +255,7 @@ export default function useCredential() {
 
     try {
       const headers = getAuthHeaders()
-      const url = `/youtube/status`
+      const url = `/youtube/get-token`
       console.log('[YouTube][GET Token] Request', {
         userId,
         url: `${API_BASE_URL}${url}`,
@@ -259,34 +267,42 @@ export default function useCredential() {
       console.log('[YouTube][GET Token] Response', {
         status: res.status,
         keys: Object.keys(res.data || {}),
-        tokenStatus: res.data?.status,
+        success: res.data?.success,
         message: res.data?.message,
-        hasAccessToken: res.data?.has_access_token,
-        hasRefreshToken: res.data?.has_refresh_token,
-        expiresAt: res.data?.expires_at,
-        tokenType: res.data?.token_type,
-        scope: res.data?.scope,
-        accessTokenPreview: res.data?.access_token_preview,
+        hasAccessToken: !!res.data?.data?.access_token,
+        expiresAt: res.data?.data?.expires_at,
+        tokenType: res.data?.data?.token_type,
+        scope: res.data?.data?.scope,
       })
 
-      // Check if token is valid
-      const isValidToken = res.data?.status === 'valid' && res.data?.has_access_token
-      
-      if (!isValidToken) {
-        throw new Error(res.data?.message || 'Token is not valid')
+      const success = res.data?.success === true
+      const data = res.data?.data || {}
+      const hasAccessToken = !!data.access_token
+
+      if (!success || !hasAccessToken) {
+        throw new Error(res.data?.message || 'Token is not available')
       }
 
-      // Update state with token data
+      const mapped: YouTubeToken = {
+        status: 'valid',
+        message: res.data?.message || 'Token retrieved successfully',
+        has_access_token: true,
+        has_refresh_token: !!data.refresh_token,
+        expires_at: data.expires_at || '',
+        token_type: data.token_type || 'Bearer',
+        scope: data.scope || '',
+        access_token_preview: typeof data.access_token === 'string' ? `${data.access_token.slice(0, 8)}...${data.access_token.slice(-6)}` : '',
+      }
+
       setTokenState(prev => ({
         ...prev,
         isLoading: false,
         error: null,
-        message: res.data?.message || 'Token retrieved successfully',
-        token: res.data
+        message: mapped.message,
+        token: mapped,
       }))
 
-      toast({ title: 'Fetched YouTube token', description: res.data?.message || 'Access token received successfully.' })
-      return res.data
+      return mapped
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         console.error('[YouTube][GET Token] Error', {
@@ -308,14 +324,12 @@ export default function useCredential() {
         token: null
       }))
       
-      toast({ title: 'Failed to fetch token', description })
       throw error
     }
-  }, [API_BASE_URL, getAuthHeaders, maskToken, toast, userId])
+  }, [API_BASE_URL, getAuthHeaders, maskToken, userId])
 
   const refreshYouTubeToken = useCallback(async (): Promise<YouTubeToken | undefined> => {
     if (!userId) {
-      toast({ title: 'Missing user', description: 'No user id found. Please log in.' })
       return
     }
 
@@ -327,7 +341,7 @@ export default function useCredential() {
 
     try {
       const headers = getAuthHeaders()
-      const url = `/youtube/status`
+      const url = `/youtube/get-token`
       console.log('[YouTube][Refresh Token] Request', {
         userId,
         url: `${API_BASE_URL}${url}`,
@@ -339,34 +353,42 @@ export default function useCredential() {
       console.log('[YouTube][Refresh Token] Response', {
         status: res.status,
         keys: Object.keys(res.data || {}),
-        tokenStatus: res.data?.status,
+        success: res.data?.success,
         message: res.data?.message,
-        hasAccessToken: res.data?.has_access_token,
-        hasRefreshToken: res.data?.has_refresh_token,
-        expiresAt: res.data?.expires_at,
-        tokenType: res.data?.token_type,
-        scope: res.data?.scope,
-        accessTokenPreview: res.data?.access_token_preview,
+        hasAccessToken: !!res.data?.data?.access_token,
+        expiresAt: res.data?.data?.expires_at,
+        tokenType: res.data?.data?.token_type,
+        scope: res.data?.data?.scope,
       })
 
-      // Check if token is valid
-      const isValidToken = res.data?.status === 'valid' && res.data?.has_access_token
-      
-      if (!isValidToken) {
-        throw new Error(res.data?.message || 'Token is not valid')
+      const success = res.data?.success === true
+      const data = res.data?.data || {}
+      const hasAccessToken = !!data.access_token
+
+      if (!success || !hasAccessToken) {
+        throw new Error(res.data?.message || 'Token is not available')
       }
 
-      // Update state with refreshed token data
+      const mapped: YouTubeToken = {
+        status: 'valid',
+        message: res.data?.message || 'Token refreshed successfully',
+        has_access_token: true,
+        has_refresh_token: !!data.refresh_token,
+        expires_at: data.expires_at || '',
+        token_type: data.token_type || 'Bearer',
+        scope: data.scope || '',
+        access_token_preview: typeof data.access_token === 'string' ? `${data.access_token.slice(0, 8)}...${data.access_token.slice(-6)}` : '',
+      }
+
       setTokenState(prev => ({
         ...prev,
         isLoading: false,
         error: null,
-        message: res.data?.message || 'Token refreshed successfully',
-        token: res.data
+        message: mapped.message,
+        token: mapped,
       }))
 
-      toast({ title: 'Token refreshed', description: res.data?.message || 'YouTube access token refreshed.' })
-      return res.data
+      return mapped
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         console.error('[YouTube][Refresh Token] Error', {
@@ -388,10 +410,9 @@ export default function useCredential() {
         token: null
       }))
       
-      toast({ title: 'Failed to refresh token', description })
       throw error
     }
-  }, [API_BASE_URL, getAuthHeaders, maskToken, toast, userId])
+  }, [API_BASE_URL, getAuthHeaders, maskToken, userId])
 
   return {
     // State

@@ -13,10 +13,11 @@ import { useAuth } from "@/lib/hooks/auth"
 
 export default function YouTubeConnectPage() {
   const [isConnecting, setIsConnecting] = useState(false)
+  const [isPolling, setIsPolling] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
   const router = useRouter()
   const { logout } = useAuth()
   
-  // Existing credential management
   const { 
     createYouTubeToken, 
     openAuthUrl, 
@@ -24,10 +25,10 @@ export default function YouTubeConnectPage() {
     isLoading, 
     error, 
     authUrl, 
-    message 
+    message,
+    getYouTubeToken,
   } = useCredential()
 
-  // New credentials check functionality
   const {
     isChecking,
     hasCredentials,
@@ -38,109 +39,104 @@ export default function YouTubeConnectPage() {
     lastChecked
   } = useYouTubeCredentials()
 
+  // Helper: poll token status until valid or timeout
+  useEffect(() => {
+    let timer: any
+    let attempts = 0
+
+    const startPolling = async () => {
+      if (isPolling) return
+      setIsPolling(true)
+      attempts = 0
+
+      const poll = async () => {
+        attempts += 1
+        try {
+          const token = await getYouTubeToken()
+          if (token && token.status === 'valid' && token.has_access_token) {
+            setIsPolling(false)
+            setRedirecting(true)
+            router.replace('/dashboard')
+            return
+          }
+        } catch {}
+
+        if (attempts < 30) {
+          timer = setTimeout(poll, 2000)
+        } else {
+          setIsPolling(false)
+        }
+      }
+
+      poll()
+    }
+
+    if (authUrl && !isPolling) {
+      startPolling()
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [authUrl, getYouTubeToken, isPolling, router])
+
   const handleYouTubeConnect = async () => {
     setIsConnecting(true)
-    
     try {
-      // Create YouTube OAuth token
-      const tokenResponse = await createYouTubeToken()
-      
-      // Open the OAuth URL in a new window
-      const authWindow = openAuthUrl(tokenResponse.auth_url)
-      
-      if (authWindow) {
-        // OAuth window opened successfully
-        // Note: In a real implementation, you would:
-        // 1. Listen for OAuth completion via webhook or polling
-        // 2. Check OAuth status from backend
-        // 3. Redirect to dashboard only after confirmed OAuth success
-        
-        // For now, we'll show success message and provide manual redirect
-        // The user will need to complete OAuth in the opened window
-        // and then manually proceed to dashboard
+      const tokenStatus = await getYouTubeToken().catch(() => undefined)
+      if (tokenStatus && tokenStatus.status === 'valid' && tokenStatus.has_access_token) {
+        setRedirecting(true)
+        router.replace('/dashboard')
+        return
       }
-      
+
+      const tokenResponse = await createYouTubeToken()
+      openAuthUrl(tokenResponse.auth_url)
+      // polling starts via effect when authUrl is set
     } catch (err: any) {
-      // Error state is already handled by the hook
     } finally {
       setIsConnecting(false)
     }
   }
 
+  // On mount: auto-connect flow
+  useEffect(() => {
+    (async () => {
+      try {
+        const tokenStatus = await getYouTubeToken()
+        if (tokenStatus && tokenStatus.status === 'valid' && tokenStatus.has_access_token) {
+          setRedirecting(true)
+          router.replace('/dashboard')
+          return
+        }
+      } catch {}
+
+      handleYouTubeConnect()
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleRetry = () => {
     resetTokenState()
+    handleYouTubeConnect()
   }
-
-  const handleProceedToDashboard = () => {
-    // Check if there's a stored redirect URL
-    const redirectUrl = localStorage.getItem('youtube_redirect_after_auth')
-    if (redirectUrl) {
-      localStorage.removeItem('youtube_redirect_after_auth')
-      router.push(redirectUrl)
-    } else {
-      router.push("/dashboard")
-    }
-  }
-
-  const handleRefreshCheck = async () => {
-    await refreshCredentialsCheck()
-  }
-
-  const handleReconnect = () => {
-    resetTokenState()
-    // Clear any existing error states
-  }
-
-  // If no client credentials exist, send user to credentials form first
-  useEffect(() => {
-    // Heuristic: if backend keeps returning 401 for token and we have no authUrl yet,
-    // and user has not created client credentials through our form, push to /auth/credential.
-    // We keep it simple: when we land here without authUrl, we prefer credential form first.
-    if (!authUrl && !isLoadingAny && !hasCredentials) {
-      // Route to the credentials page to collect client id/secret
-      // This complements the dashboard guard and handles direct visits to this page
-      // without configured client credentials.
-      // We store intended return path.
-      try {
-        localStorage.setItem('youtube_redirect_after_auth', '/dashboard')
-      } catch {}
-      // Redirect to credential entry page
-      // Delay one tick to avoid interfering with initial render
-      const t = setTimeout(() => router.replace('/auth/credential'), 0)
-      return () => clearTimeout(t)
-    }
-  }, [authUrl, isLoadingAny, hasCredentials, router])
 
   const handleLogout = () => {
     logout()
   }
 
-  // Check for existing credentials on component mount
-  // Soft-check only when user clicks refresh; avoid auto-check to prevent noisy errors
-  useEffect(() => {
-    // Intentionally no auto-check on mount to keep UI-first and resilient
-  }, [])
+  const isLoadingAny = isLoading || isConnecting || isChecking || isPolling || redirecting
 
-  // Determine the current state and what UI to show
-  const isLoadingAny = isLoading || isConnecting || isChecking
-  const hasAnyError = false // Always render the connect UI; never block on backend errors
-  const hasCredentialsData = !!credentials
-  const showCredentialsFound = hasCredentials && !authUrl
-  const showNoCredentials = !hasCredentials && !authUrl && !hasAnyError
-  const showOAuthFlow = authUrl && !hasAnyError
-
-  // Auto-initiate OAuth if user doesn't have credentials (after initial check completes)
-  // No auto-connect; user explicitly initiates
-
-  // If checking, show only a full-screen loader
-  // Never block the route; always show the connect UI
-
-  // If credentials exist, immediately redirect to dashboard with minimal UI
-  useEffect(() => {
-    if (hasCredentials && !isLoadingAny) {
-      router.push('/dashboard')
-    }
-  }, [hasCredentials, isLoadingAny, router])
+  if (isLoadingAny) {
+    return (
+      <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
+        <div className="flex items-center gap-3 text-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>{redirecting ? 'Redirecting...' : isPolling ? 'Waiting for authorization...' : isLoading ? 'Creating OAuth token...' : isConnecting ? 'Connecting to YouTube...' : 'Loading...'}</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-3 sm:p-4 lg:p-6">
@@ -161,66 +157,31 @@ export default function YouTubeConnectPage() {
               <Youtube className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
             </div>
             <CardTitle className="text-lg sm:text-xl lg:text-2xl">
-              {showCredentialsFound ? 'YouTube Already Connected!' : 'Connect Your YouTube Channel'}
+              Connect Your YouTube Channel
             </CardTitle>
             <CardDescription className="text-sm sm:text-base">
-              {showCredentialsFound ? 'Your YouTube account is connected and ready to use' :
-               'Connect your YouTube account to start automating your video content with AI'}
+              We will connect your YouTube account and bring you to the dashboard automatically
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
 
-            {/* Auto-redirect Message */}
-            {typeof window !== 'undefined' && localStorage.getItem('youtube_redirect_after_auth') && !isLoadingAny && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="space-y-2">
-                    <p>🔗 YouTube connection required to continue.</p>
-                    <p className="text-sm text-muted-foreground">
-                      You'll be redirected back to your previous page after connecting your YouTube account.
-                    </p>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <p>🔗 Connecting your YouTube account...</p>
+                  <p className="text-sm text-muted-foreground">
+                    If the popup is blocked, click the button below to open it.
+                  </p>
+                </div>
+              </AlertDescription>
+            </Alert>
 
-            {/* Loading State */}
-            {isLoadingAny && !isChecking && (
-              <Alert>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <AlertDescription>
-                  {isLoading ? 'Creating OAuth token...' :
-                   isConnecting ? 'Connecting to YouTube...' :
-                   'Loading...'}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Credentials Found - Valid: now skipped (auto-redirect) */}
-            
-            {/* Error Display intentionally suppressed to keep flow UI-first */}
-
-            {/* Success Message */}
-            {message && !error && !credentialsError && (
-              <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="space-y-2">
-                    <p>{message}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Please complete the OAuth process in the opened window, then return here to proceed to the dashboard.
-                    </p>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Auth URL Display */}
-            {showOAuthFlow && (
+            {/* Auth URL Controls */}
+            {authUrl && (
               <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  OAuth URL received. If the window didn't open automatically, click below:
+                  OAuth URL ready. If the window didn't open automatically, click below:
                 </p>
                 <Button
                   variant="outline"
@@ -231,61 +192,19 @@ export default function YouTubeConnectPage() {
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Open YouTube OAuth
                 </Button>
-                
-                <div className="pt-3 border-t border-border">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    After completing OAuth in the opened window, click below to proceed:
-                  </p>
-                  <Button
-                    onClick={handleProceedToDashboard}
-                    className="w-full crypto-button-primary"
-                  >
-                    Proceed to Dashboard
-                  </Button>
-                </div>
               </div>
-            )}
-
-            {/* Features List - Only show when no credentials */}
-            {showNoCredentials && !isLoadingAny && (
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 crypto-profit flex-shrink-0" />
-                  <span className="text-xs sm:text-sm">Generate AI-powered titles and descriptions</span>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 crypto-profit flex-shrink-0" />
-                  <span className="text-xs sm:text-sm">Create custom thumbnails automatically</span>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 crypto-profit flex-shrink-0" />
-                  <span className="text-xs sm:text-sm">Schedule and publish videos seamlessly</span>
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            {(showNoCredentials || true) && !isLoadingAny && (
-              <Button
-                onClick={handleYouTubeConnect}
-                className="w-full bg-red-500 hover:bg-red-600 text-white"
-                disabled={isLoadingAny}
-                size="lg"
-              >
-                <Youtube className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">Connect with YouTube</span>
-              </Button>
             )}
 
             {/* Retry Button */}
-            {(error || credentialsError) && !isLoadingAny && (
+            {(error || credentialsError) && (
               <Button
                 onClick={handleRetry}
                 variant="outline"
                 className="w-full"
                 size="lg"
               >
-                <span className="text-sm sm:text-base">Try Again</span>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
               </Button>
             )}
 

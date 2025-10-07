@@ -82,12 +82,6 @@ export default function useYouTubeCredentials() {
     lastChecked: null,
   })
 
-  const maskToken = useCallback((token?: string) => {
-    if (!token || typeof token !== 'string') return 'none'
-    if (token.length <= 14) return token
-    return `${token.slice(0, 8)}...${token.slice(-6)}`
-  }, [])
-
   const userId = useMemo(() => {
     if (user?.id) return user.id
     if (typeof window !== 'undefined') {
@@ -96,90 +90,34 @@ export default function useYouTubeCredentials() {
     return null
   }, [user])
 
-  const checkYouTubeCredentials = useCallback(async (showSuccessToast = false, suppressToast: boolean = false): Promise<YouTubeCredentials | null> => {
-    if (!userId) {
-      setCredentialsState(prev => ({
-        ...prev,
-        hasCredentials: false,
-        credentials: null,
-        error: 'No user ID found. Please login first.',
-      }))
-      return null
-    }
-
+  // NOTE: Temporarily disable real credentials check. Assume credentials exist.
+  const checkYouTubeCredentials = useCallback(async (_showSuccessToast = false, _suppressToast: boolean = true): Promise<YouTubeCredentials | null> => {
     setCredentialsState(prev => ({
       ...prev,
       isChecking: true,
       error: null,
     }))
 
-    try {
-      const headers = getAuthHeaders()
-      const url = `/youtube/get-token`
-
-      const response = await credentialsApi.get(url, { headers })
-
-      // New response shape from /youtube/get-token
-      // {
-      //   success: boolean,
-      //   message: string,
-      //   data: { access_token: string, ... }
-      // }
-      const success = !!response.data && response.data.success === true
-      const hasToken = success && !!response.data.data && !!response.data.data.access_token
-      const hasValidCredentials = !!hasToken
-      
-      setCredentialsState(prev => ({
-        ...prev,
-        isChecking: false,
-        isLoading: false,
-        error: null,
-        hasCredentials: hasValidCredentials,
-        // store minimal info; retain previous type
-        credentials: hasValidCredentials
-          ? { has_credentials: true, is_active: true, client_id_preview: '', client_secret_preview: '' }
-          : null,
-        lastChecked: Date.now(),
-      }))
-
-      // Suppress success toast to keep flow seamless (login -> loading -> dashboard)
-
-      return response.data || null
-
-    } catch (error: any) {
-      let errorMessage = 'YouTube credentials not found'
-      let hasCredentials = false
-      let shouldSetError = false
-
-      if (axios.isAxiosError(error)) {
-        // Regardless of status, treat as not connected; keep message generic
-        errorMessage = 'YouTube credentials not found'
-      } else if (error.message) {
-        errorMessage = 'Unable to verify YouTube credentials'
-      }
-
-      setCredentialsState(prev => ({
-        ...prev,
-        isChecking: false,
-        isLoading: false,
-        error: shouldSetError ? errorMessage : null,
-        hasCredentials,
-        credentials: null,
-        lastChecked: Date.now(),
-      }))
-
-      // Optional toast; suppressed by default in guard flows
-      if (!suppressToast) {
-        toast({ 
-          title: 'Failed to check credentials', 
-          description: errorMessage,
-          variant: 'destructive'
-        })
-      }
-
-      return null
+    // Short-circuit: mark credentials as present without any network call
+    const synthetic: YouTubeCredentials = {
+      has_credentials: true,
+      is_active: true,
+      client_id_preview: '',
+      client_secret_preview: '',
     }
-  }, [userId, getAuthHeaders, maskToken, toast])
+
+    setCredentialsState(prev => ({
+      ...prev,
+      isChecking: false,
+      isLoading: false,
+      error: null,
+      hasCredentials: true,
+      credentials: synthetic,
+      lastChecked: Date.now(),
+    }))
+
+    return synthetic
+  }, [])
 
   const clearCredentials = useCallback(() => {
     setCredentialsState({
@@ -196,10 +134,10 @@ export default function useYouTubeCredentials() {
     return checkYouTubeCredentials(false)
   }, [checkYouTubeCredentials])
 
-  // Auto-check credentials when userId becomes available
+  // Auto-set credentials present when userId becomes available (no network)
   useEffect(() => {
     if (userId && !credentialsState.lastChecked) {
-      checkYouTubeCredentials(false)
+      checkYouTubeCredentials(false, true)
     }
   }, [userId, credentialsState.lastChecked, checkYouTubeCredentials])
 

@@ -14,7 +14,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Play, Eye, EyeOff, Loader2 } from "lucide-react"
 import useAuth from "@/lib/hooks/auth/useAuth"
-import useYouTubeCredentials from "@/lib/hooks/youtube/useYouTubeCredentials"
 import dynamic from "next/dynamic"
 const GoogleLoginButton = dynamic(() => import("@/components/auth/GoogleLoginButton"), { ssr: false })
 import { useToast } from "@/lib/hooks/common/useToast"
@@ -25,12 +24,21 @@ function LoginContent() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth()
-  const { checkYouTubeCredentials } = useYouTubeCredentials()
+  const { login, isAuthenticated } = useAuth()
   const { toast } = useToast()
+
+  const renderFullScreenLoader = (text: string) => (
+    <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
+      <div className="flex items-center gap-3 text-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span>{text}</span>
+      </div>
+    </div>
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,95 +46,58 @@ function LoginContent() {
     setError("")
 
     try {
-      await login({
-        email,
-        password,
-      })
-      // Kick off credentials check in background (no UI flicker)
-      ;(async () => {
-        try {
-          const result: any = await checkYouTubeCredentials(false, true)
-          const hasValidToken = !!result && result.success === true && !!result.data && !!result.data.access_token
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('needs_youtube_credentials', hasValidToken ? '0' : '1')
-          }
-        } catch {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('needs_youtube_credentials', '1')
-          }
-        }
-      })()
-      router.replace("/dashboard")
+      await login({ email, password })
+      setRedirecting(true)
+      router.replace("/auth/youtube-connect")
     } catch (err: any) {
       let message = "Login failed. Please try again."
       const axiosErr = err as AxiosError<any>
       const status = axiosErr?.response?.status
       const apiDetail = (axiosErr?.response?.data as any)?.detail
-      if (status === 401) {
-        message = "Invalid email or password."
-      } else if (status === 429) {
-        message = "Too many attempts. Please wait a moment and try again."
-      } else if (status === 500) {
-        message = "Server error during login. Please try again later."
-      } else if (apiDetail) {
-        message = String(apiDetail)
-      } else if (axiosErr?.message) {
-        message = axiosErr.message
-      }
+      if (status === 401) message = "Invalid email or password."
+      else if (status === 429) message = "Too many attempts. Please wait a moment and try again."
+      else if (status === 500) message = "Server error during login. Please try again later."
+      else if (apiDetail) message = String(apiDetail)
+      else if (axiosErr?.message) message = axiosErr.message
       setError(message)
-      toast({
-        title: "Login failed",
-        description: message,
-        variant: "destructive",
-      })
+      toast({ title: "Login failed", description: message, variant: "destructive" })
     } finally {
-      // End submitting state only if we're not redirecting (i.e., on error)
       setIsSubmitting(false)
     }
   }
 
-  // Prefetch dashboard for instant transition
   useEffect(() => {
     router.prefetch('/dashboard')
+    router.prefetch('/auth/youtube-connect')
   }, [router])
 
-  // If a token already exists in localStorage, redirect immediately
+  // If a token already exists, immediately route to connect with loader
   useEffect(() => {
     if (typeof window === 'undefined') return
     const token = localStorage.getItem('auth_token')
     if (!token) return
-    // Ensure minimal user_data exists so hooks relying on it don't block redirect
     const userData = localStorage.getItem('user_data')
     if (!userData) {
       const minimalUser = {
-        id: 'user',
-        email: '',
-        username: '',
-        full_name: '',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        id: 'user', email: '', username: '', full_name: '', is_active: true,
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
       }
       try { localStorage.setItem('user_data', JSON.stringify(minimalUser)) } catch {}
     }
-    router.replace('/dashboard')
+    setRedirecting(true)
+    router.replace('/auth/youtube-connect')
   }, [router])
 
-  // Handle Google callback that redirects back to this login page with an access token in the URL
+  // Handle Google callback variants that pass token directly in URL
   useEffect(() => {
-    // Avoid running on server
     if (typeof window === 'undefined') return
-
     const tokenFromUrl = searchParams.get('access_token') || searchParams.get('token')
-    const successFromUrl = searchParams.get('success')
     const userFromUrl = searchParams.get('user')
     const emailFromUrl = searchParams.get('email')
     if (!tokenFromUrl) return
 
-    // Save token to localStorage to align with existing auth storage
     try {
       localStorage.setItem('auth_token', tokenFromUrl)
-      // Save minimal user data if provided to satisfy UI immediately
       if (userFromUrl || emailFromUrl) {
         const minimalUser = {
           id: userFromUrl || emailFromUrl || 'user',
@@ -139,61 +110,38 @@ function LoginContent() {
         }
         localStorage.setItem('user_data', JSON.stringify(minimalUser))
       }
-    } catch {
-      // No-op: if storage fails, continue to normal login flow
-    }
+    } catch {}
 
-    // Clean query params from URL (remove token)
     try {
       const url = new URL(window.location.href)
       url.searchParams.delete('access_token')
       url.searchParams.delete('token')
       window.history.replaceState({}, '', url.toString())
-    } catch {
-      // ignore URL cleanup errors
-    }
+    } catch {}
 
-    // Redirect to dashboard; background flows can later fetch and populate user info
-    router.replace('/dashboard')
+    setRedirecting(true)
+    router.replace('/auth/youtube-connect')
   }, [searchParams, router])
 
-  // Prevent UI flash: if token present in URL, show loader instead of form until redirect
   const hasOauthToken = !!(typeof window !== 'undefined' && (searchParams.get('access_token') || searchParams.get('token')))
 
-  // If already authenticated: immediately redirect to dashboard (no loader flicker)
+  // If already authenticated, go to connect page which will decide final destination
   useEffect(() => {
     const run = async () => {
       if (!isAuthenticated) return
-      router.replace("/dashboard")
-      // Background credential check (optional; won't block navigation)
-      ;(async () => {
-        try {
-          const result: any = await checkYouTubeCredentials(false, true)
-          const hasValidToken = !!result && result.success === true && !!result.data && !!result.data.access_token
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('needs_youtube_credentials', hasValidToken ? '0' : '1')
-          }
-        } catch {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('needs_youtube_credentials', '1')
-          }
-        }
-      })()
+      setRedirecting(true)
+      router.replace("/auth/youtube-connect")
     }
     run()
-  }, [isAuthenticated, checkYouTubeCredentials, router])
+  }, [isAuthenticated, router])
 
-  // No custom loaders here to avoid flicker; rely on instant route prefetch
+  if (isSubmitting || hasOauthToken || redirecting) {
+    return renderFullScreenLoader('Signing you in...')
+  }
 
   return (
       <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {hasOauthToken ? (
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-            <span>Signing you in...</span>
-          </div>
-        ) : (
         <>
         {/* Logo */}
         <div className="text-center mb-8">
@@ -298,7 +246,6 @@ function LoginContent() {
           </Link>
         </div>
         </>
-        )}
       </div>
       </div>
   )
