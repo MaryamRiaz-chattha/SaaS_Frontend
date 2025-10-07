@@ -129,14 +129,20 @@ export default function useCredential() {
         },
       })
       
-      const { message, auth_url, instructions } = response.data || {}
+      // Adjusted to nested structure: response.data.data.auth_url
+      const top = response.data || {}
+      const nested = top.data || {}
+      const message = typeof top.message === 'string' ? top.message : (typeof nested.message === 'string' ? nested.message : '')
+      const auth_url = typeof nested.auth_url === 'string' ? nested.auth_url : ''
+      const instructions = typeof nested.instructions === 'string' ? nested.instructions : ''
+
       console.log('✅ YouTube token creation successful:', {
         message,
         hasAuthUrl: !!auth_url,
         instructions,
       })
 
-      if (!auth_url || typeof auth_url !== 'string') {
+      if (!auth_url) {
         const missingUrlMessage = 'Authorization URL was not provided by the server.'
         setTokenState(prev => ({
           ...prev,
@@ -148,7 +154,6 @@ export default function useCredential() {
         return { message: message || missingUrlMessage, auth_url: '', instructions: instructions || '' }
       }
       
-      // Update state with response data
       setTokenState(prev => ({
         ...prev,
         isLoading: false,
@@ -170,24 +175,15 @@ export default function useCredential() {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
           errorMessage = 'Authentication failed. Please login again.'
-          console.error('🔒 Unauthorized - user needs to re-authenticate')
         } else if (error.response?.status === 400) {
           errorMessage = error.response.data?.detail || 'Invalid request'
-          console.error('📋 Bad request details:', error.response.data)
         } else if (error.response?.status === 500) {
           errorMessage = 'Server error. Please try again later.'
-          console.error('🖥️ Server error:', error.response.data)
         } else {
           errorMessage = `Request failed: ${error.response?.status} ${error.response?.statusText}`
-          console.error('📋 Error response details:', {
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-          })
         }
       } else if (error.message) {
         errorMessage = error.message
-        console.error('📋 Custom error message:', error.message)
       }
       
       setTokenState(prev => ({
@@ -280,7 +276,9 @@ export default function useCredential() {
       const hasAccessToken = !!data.access_token
 
       if (!success || !hasAccessToken) {
-        throw new Error(res.data?.message || 'Token is not available')
+        // Do not throw; return undefined so caller can start OAuth flow silently
+        setTokenState(prev => ({ ...prev, isLoading: false, error: 'No YouTube tokens found. Please connect your YouTube account first.', token: null }))
+        return undefined
       }
 
       const mapped: YouTubeToken = {
@@ -324,7 +322,8 @@ export default function useCredential() {
         token: null
       }))
       
-      throw error
+      // Also do not throw on network error; allow caller to proceed to OAuth
+      return undefined
     }
   }, [API_BASE_URL, getAuthHeaders, maskToken, userId])
 
@@ -366,7 +365,8 @@ export default function useCredential() {
       const hasAccessToken = !!data.access_token
 
       if (!success || !hasAccessToken) {
-        throw new Error(res.data?.message || 'Token is not available')
+        setTokenState(prev => ({ ...prev, isLoading: false, error: 'No YouTube tokens found. Please connect your YouTube account first.', token: null }))
+        return undefined
       }
 
       const mapped: YouTubeToken = {
@@ -410,7 +410,7 @@ export default function useCredential() {
         token: null
       }))
       
-      throw error
+      return undefined
     }
   }, [API_BASE_URL, getAuthHeaders, maskToken, userId])
 

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Play, Youtube, Loader2, ExternalLink, RefreshCw, LogOut } from "lucide-react"
 import useCredential from "@/lib/hooks/ai/useCredential"
 import useYouTubeCredentials from "@/lib/hooks/youtube/useYouTubeCredentials"
@@ -15,6 +14,7 @@ export default function YouTubeConnectPage() {
   const [isConnecting, setIsConnecting] = useState(false)
   const [isPolling, setIsPolling] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
+  const [initialChecked, setInitialChecked] = useState(false)
   const router = useRouter()
   const { logout } = useAuth()
   
@@ -39,6 +39,7 @@ export default function YouTubeConnectPage() {
     lastChecked
   } = useYouTubeCredentials()
 
+  // Poll token status only after we have an authUrl (user initiated)
   useEffect(() => {
     let timer: any
     let attempts = 0
@@ -74,14 +75,13 @@ export default function YouTubeConnectPage() {
       startPolling()
     }
 
-    return () => {
-      if (timer) clearTimeout(timer)
-    }
+    return () => { if (timer) clearTimeout(timer) }
   }, [authUrl, getYouTubeToken, isPolling, router])
 
   const handleYouTubeConnect = async () => {
     setIsConnecting(true)
     try {
+      // If token exists already, skip OAuth
       const tokenStatus = await getYouTubeToken().catch(() => undefined)
       if (tokenStatus && tokenStatus.status === 'valid' && tokenStatus.has_access_token) {
         setRedirecting(true)
@@ -99,6 +99,7 @@ export default function YouTubeConnectPage() {
     }
   }
 
+  // Initial fast-path check: if user is already connected, redirect; otherwise show the connect screen
   useEffect(() => {
     (async () => {
       try {
@@ -109,24 +110,22 @@ export default function YouTubeConnectPage() {
           return
         }
       } catch {}
-
-      handleYouTubeConnect()
+      setInitialChecked(true)
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleRetry = () => {
     resetTokenState()
-    handleYouTubeConnect()
   }
 
   const handleLogout = () => {
     logout()
   }
 
-  const isLoadingAny = isLoading || isConnecting || isChecking || isPolling || redirecting
+  const isBusy = isLoading || isConnecting || isChecking || isPolling || redirecting
 
-  if (isLoadingAny) {
+  if (!initialChecked || isBusy) {
     return (
       <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -160,19 +159,13 @@ export default function YouTubeConnectPage() {
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
 
-            {authUrl && (
-              <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openAuthUrl(authUrl)}
-                  className="w-full"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open YouTube OAuth
-                </Button>
-              </div>
-            )}
+            <Button
+              onClick={handleYouTubeConnect}
+              className="w-full"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Connect with YouTube
+            </Button>
 
             {(error || credentialsError) && (
               <Button
