@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/hooks/auth"
 export default function YouTubeConnectPage() {
   const [isConnecting, setIsConnecting] = useState(false)
   const [isPolling, setIsPolling] = useState(false)
+  const [shouldPoll, setShouldPoll] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
   const [initialChecked, setInitialChecked] = useState(false)
   const router = useRouter()
@@ -39,7 +40,7 @@ export default function YouTubeConnectPage() {
     lastChecked
   } = useYouTubeCredentials()
 
-  // Poll token status only after we have an authUrl (user initiated)
+  // Poll token status only after user initiated OAuth (shouldPoll)
   useEffect(() => {
     let timer: any
     let attempts = 0
@@ -55,6 +56,7 @@ export default function YouTubeConnectPage() {
           const token = await getYouTubeToken()
           if (token && token.status === 'valid' && token.has_access_token) {
             setIsPolling(false)
+            setShouldPoll(false)
             setRedirecting(true)
             router.replace('/dashboard')
             return
@@ -64,19 +66,21 @@ export default function YouTubeConnectPage() {
         if (attempts < 30) {
           timer = setTimeout(poll, 2000)
         } else {
+          // Timeout reached; stop polling and allow user to retry
           setIsPolling(false)
+          setShouldPoll(false)
         }
       }
 
       poll()
     }
 
-    if (authUrl && !isPolling) {
+    if (shouldPoll && authUrl && !isPolling) {
       startPolling()
     }
 
     return () => { if (timer) clearTimeout(timer) }
-  }, [authUrl, getYouTubeToken, isPolling, router])
+  }, [shouldPoll, authUrl, getYouTubeToken, isPolling, router])
 
   const handleYouTubeConnect = async () => {
     setIsConnecting(true)
@@ -92,6 +96,8 @@ export default function YouTubeConnectPage() {
       const tokenResponse = await createYouTubeToken()
       if (tokenResponse.auth_url) {
         openAuthUrl(tokenResponse.auth_url)
+        // Start polling only after opening the popup successfully
+        setShouldPoll(true)
       }
     } catch (err: any) {
     } finally {
@@ -117,6 +123,7 @@ export default function YouTubeConnectPage() {
 
   const handleRetry = () => {
     resetTokenState()
+    setShouldPoll(false)
   }
 
   const handleLogout = () => {
