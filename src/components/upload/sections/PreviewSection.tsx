@@ -372,9 +372,6 @@ export function PreviewSection({
                 >
                   Continue to Preview
                 </Button>
-                <Button onClick={handleAllInOne} className="ml-2">
-                  Create All-in-One
-                </Button>
               </div>
             </div>
           </>
@@ -429,8 +426,7 @@ export function PreviewSection({
                   </div>
                 )}
 
-                {/* Final Preview - Only Important Content */
-                }
+                {/* Final Preview - Only Important Content */}
                 {!previewLoading && !previewError && (
                   <div className="space-y-6">
                     {/* All-in-One Result (if present) */}

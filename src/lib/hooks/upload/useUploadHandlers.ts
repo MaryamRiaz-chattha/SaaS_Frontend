@@ -57,6 +57,19 @@ export const useUploadHandlers = ({
     const file = event.target.files?.[0]
     if (!file) return
 
+    // Check if Gemini API key exists before allowing upload
+    const geminiKey = localStorage.getItem('gemini_api_key')
+    if (!geminiKey || geminiKey.trim() === '') {
+      toast({
+        title: "Gemini API Key Required",
+        description: "Please go to Settings and enter your Gemini API key before uploading videos.",
+        variant: "destructive",
+      })
+      // Reset the file input
+      event.target.value = ''
+      return
+    }
+
     updateState({
       uploadedFile: file,
       isUploading: true,
@@ -92,7 +105,7 @@ export const useUploadHandlers = ({
     } finally {
       updateState({ isUploading: false })
     }
-  }, [uploadVideo, resetUploadState, updateState])
+  }, [uploadVideo, resetUploadState, updateState, toast])
 
   const handleYouTubeUrlDownload = useCallback(async () => {
     if (!state.youtubeUrl.trim()) {
