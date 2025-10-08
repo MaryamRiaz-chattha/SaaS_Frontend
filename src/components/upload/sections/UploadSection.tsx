@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { UploadState, UploadHandlers } from "@/types/upload"
+import { useRef } from "react"
 
 interface UploadSectionProps {
   state: UploadState
@@ -25,6 +26,8 @@ export const UploadSection = ({
   downloadProgress, 
   downloadError 
 }: UploadSectionProps) => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
   return (
     <Card className="crypto-card crypto-hover-glow">
       <CardHeader>
@@ -40,7 +43,12 @@ export const UploadSection = ({
         <div className="space-y-4">
           <Label className="crypto-text-primary">Upload Method</Label>
           <div className="flex gap-2 p-1 bg-muted rounded-lg">
-            <Button variant="crypto" size="sm" className="flex-1">
+            <Button 
+              variant="crypto" 
+              size="sm" 
+              className="flex-1"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <Upload className="w-4 h-4 mr-2" />
               Upload File
             </Button>
@@ -55,6 +63,7 @@ export const UploadSection = ({
               <Upload className="mx-auto h-8 w-8 lg:h-12 lg:w-12 crypto-text-tertiary mb-4" />
               <Input
                 id="video-upload"
+                ref={fileInputRef}
                 type="file"
                 accept="video/*"
                 onChange={handlers.handleFileUpload}

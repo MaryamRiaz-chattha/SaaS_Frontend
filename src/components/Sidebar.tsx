@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Upload, Video, BarChart3, Menu, X, List, ChevronDown, ChevronRight } from "lucide-react"
+import { Upload, Video, BarChart3, Menu, X, List, ChevronDown, ChevronRight, Sparkles } from "lucide-react"
 import { useChannelPlaylists } from "@/lib/hooks/dashboard/playlists/useChannelPlaylists"
 
 const sidebarItems = [
@@ -15,19 +15,9 @@ const sidebarItems = [
     icon: BarChart3,
   },
   {
-    title: "Upload Video",
-    href: "/dashboard/upload",
-    icon: Upload,
-  },
-  {
     title: "YouTube Videos",
     href: "/dashboard/videos",
     icon: Video,
-  },
-  {
-    title: "YouTube Studio",
-    href: "/youtube-studio-dashboard",
-    icon: BarChart3,
   },
 ]
 
@@ -36,9 +26,11 @@ export function Sidebar() {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isPlaylistsOpen, setIsPlaylistsOpen] = useState(false)
+  const [isGenerateVideoOpen, setIsGenerateVideoOpen] = useState(false)
   
   const { playlists, isLoading: playlistsLoading } = useChannelPlaylists()
   const playlistsRef = useRef<HTMLDivElement>(null)
+  const generateVideoRef = useRef<HTMLDivElement>(null)
 
   // Close playlists dropdown when clicking outside
   useEffect(() => {
@@ -46,16 +38,19 @@ export function Sidebar() {
       if (playlistsRef.current && !playlistsRef.current.contains(event.target as Node)) {
         setIsPlaylistsOpen(false)
       }
+      if (generateVideoRef.current && !generateVideoRef.current.contains(event.target as Node)) {
+        setIsGenerateVideoOpen(false)
+      }
     }
 
-    if (isPlaylistsOpen) {
+    if (isPlaylistsOpen || isGenerateVideoOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isPlaylistsOpen])
+  }, [isPlaylistsOpen, isGenerateVideoOpen])
 
   // Auto-select first playlist when on playlists page without specific playlist
   useEffect(() => {
@@ -116,6 +111,67 @@ export function Sidebar() {
                   </Link>
                 )
               })}
+
+              {/* Generate Video Dropdown */}
+              <div className="space-y-2" ref={generateVideoRef}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between h-12 px-3 cursor-pointer gap-3 rounded-lg text-foreground transition-all duration-200",
+                    (pathname === '/dashboard/upload' || pathname === '/dashboard/all-in-one')
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-transparent hover:bg-accent hover:text-accent-foreground"
+                  )}
+                  onClick={() => setIsGenerateVideoOpen(!isGenerateVideoOpen)}
+                >
+                  <div className="flex items-center gap-4">
+                    <Upload className="h-5 w-5" />
+                    <span>Generate Video</span>
+                  </div>
+                  {isGenerateVideoOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </Button>
+                
+                {isGenerateVideoOpen && (
+                  <div className="ml-6 space-y-2">
+                    <Link href="/dashboard/upload">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "w-full justify-start h-10 px-3 text-sm cursor-pointer rounded-md text-foreground transition-all duration-200",
+                          pathname === '/dashboard/upload'
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-transparent hover:bg-accent hover:text-accent-foreground"
+                        )}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Video
+                      </Button>
+                    </Link>
+                    <Link href="/dashboard/all-in-one">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "w-full justify-start h-10 px-3 text-sm cursor-pointer rounded-md text-foreground transition-all duration-200",
+                          pathname === '/dashboard/all-in-one'
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-transparent hover:bg-accent hover:text-accent-foreground"
+                        )}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        All-in-One
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
               {/* YouTube Playlists Dropdown */}
               <div className="space-y-4" ref={playlistsRef}>

@@ -50,6 +50,8 @@ export default function useThumbnail() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [generatedThumbnails, setGeneratedThumbnails] = useState<string[]>([])
+  // Track loading state for each individual thumbnail (0-4)
+  const [thumbnailLoadingStates, setThumbnailLoadingStates] = useState<boolean[]>([false, false, false, false, false])
 
   const axiosInstance = axios.create({
     baseURL: API_BASE_URL,
@@ -100,17 +102,43 @@ export default function useThumbnail() {
 
     setIsLoading(true)
     setError(null)
+    // Clear existing thumbnails and set all loading states to true
+    setGeneratedThumbnails([])
+    setThumbnailLoadingStates([true, true, true, true, true])
 
     try {
       console.log('[Thumbnail][Batch Generate] Starting generation of 5 thumbnails for video:', videoId)
 
       // Generate 5 thumbnails by calling the API 5 times
-      const promises = Array.from({ length: 5 }, (_, index) => 
-        generateSingleThumbnail(videoId).catch(error => {
+      const promises = Array.from({ length: 5 }, async (_, index) => {
+        try {
+          const result = await generateSingleThumbnail(videoId)
+          // Mark this specific thumbnail as loaded
+          setThumbnailLoadingStates(prev => {
+            const newStates = [...prev]
+            newStates[index] = false
+            return newStates
+          })
+          // Add thumbnail to the list as soon as it's ready
+          if (result?.image_url) {
+            setGeneratedThumbnails(prev => {
+              const newThumbnails = [...prev]
+              newThumbnails[index] = result.image_url
+              return newThumbnails
+            })
+          }
+          return result
+        } catch (error) {
           console.error(`[Thumbnail][Batch Generate] Failed to generate thumbnail ${index + 1}:`, error)
+          // Mark as failed (not loading anymore)
+          setThumbnailLoadingStates(prev => {
+            const newStates = [...prev]
+            newStates[index] = false
+            return newStates
+          })
           return null
-        })
-      )
+        }
+      })
 
       const results = await Promise.allSettled(promises)
       
@@ -138,6 +166,7 @@ export default function useThumbnail() {
         throw new Error('Failed to generate any thumbnails')
       }
 
+      // Final update with all thumbnails
       setGeneratedThumbnails(thumbnails)
 
       const successMessage = thumbnails.length === 5 
@@ -196,6 +225,8 @@ export default function useThumbnail() {
       throw new Error(errorMessage)
     } finally {
       setIsLoading(false)
+      // Ensure all loading states are false
+      setThumbnailLoadingStates([false, false, false, false, false])
     }
   }, [getAuthHeaders, toast, generateSingleThumbnail])
 
@@ -420,6 +451,7 @@ export default function useThumbnail() {
     isLoading,
     error,
     generatedThumbnails,
+    thumbnailLoadingStates,
     generateThumbnails,
     regenerateThumbnails,
     saveThumbnail,

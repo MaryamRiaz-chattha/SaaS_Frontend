@@ -64,7 +64,9 @@ export const useUploadPage = () => {
   const {
     generateThumbnails: generateThumbnailsAPI,
     regenerateThumbnails,
+    saveThumbnail,
     generatedThumbnails,
+    thumbnailLoadingStates,
     isLoading: thumbnailsLoading
   } = useThumbnail()
   const {
@@ -185,6 +187,7 @@ export const useUploadPage = () => {
     generatedTimestamps,
     timestampsLoading,
     generatedThumbnails,
+    thumbnailLoadingStates,
     thumbnailsLoading,
     previewData,
     previewLoading,
@@ -211,6 +214,7 @@ export const useUploadPage = () => {
     generateTimestampsAPI,
     saveTimestamps,
     generateThumbnailsAPI,
+    saveThumbnail,
     getVideoPreview,
     updatePrivacyStatus,
     resetPrivacyState,

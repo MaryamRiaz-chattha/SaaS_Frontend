@@ -11,7 +11,7 @@ export default function QuickActions() {
         <CardDescription>Manage your channel and content</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Link href="/dashboard/upload">
             <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
               <Upload className="w-6 h-6" />
@@ -28,12 +28,6 @@ export default function QuickActions() {
             <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
               <Play className="w-6 h-6" />
               <span>Playlists</span>
-            </Button>
-          </Link>
-          <Link href="/youtube-studio-dashboard">
-            <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
-              <BarChart3 className="w-6 h-6" />
-              <span>YouTube Studio</span>
             </Button>
           </Link>
         </div>

@@ -27,7 +27,6 @@ export default function DashboardLayout({
         '/dashboard/videos': 'YouTube Videos',
         '/dashboard/playlists': 'YouTube Playlists',
         '/dashboard/user-settings': 'Settings',
-        '/youtube-studio-dashboard': 'YouTube Studio',
       }
       
       const baseTitle = routeTitles[pathname] || 'Dashboard'

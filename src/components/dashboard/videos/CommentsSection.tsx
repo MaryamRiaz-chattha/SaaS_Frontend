@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { MessageCircle, ThumbsUp, RefreshCw, User, Reply, Trash2, Send } from "lucide-react"
+import { MessageCircle, ThumbsUp, RefreshCw, User, Reply, Trash2, Send, Sparkles, Loader2 } from "lucide-react"
 import useComments, { Comment } from "@/lib/hooks/dashboard/videos/useComments"
 import { toast } from "@/lib/hooks/common/useToast"
 // Simple date formatting without external dependencies
@@ -17,9 +17,13 @@ interface CommentItemProps {
   isReply?: boolean;
   onReply: (parentCommentId: string, replyText: string) => Promise<void>;
   onDelete: (commentId: string) => void;
+  // AI reply helpers
+  onGenerateAi: (commentId: string, commentText: string) => Promise<void>;
+  aiReply?: string;
+  isGeneratingAi?: boolean;
 }
 
-function CommentItem({ comment, isReply = false, onReply, onDelete }: CommentItemProps) {
+function CommentItem({ comment, isReply = false, onReply, onDelete, onGenerateAi, aiReply, isGeneratingAi }: CommentItemProps) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
@@ -72,6 +76,19 @@ function CommentItem({ comment, isReply = false, onReply, onDelete }: CommentIte
       setIsSubmittingReply(false);
     }
   };
+
+  const handleUseGenerated = async () => {
+    if (!aiReply) return;
+    setIsSubmittingReply(true);
+    try {
+      await onReply(comment.comment_id, aiReply);
+      toast({ title: "Reply posted", description: "AI-generated reply posted successfully." });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to post AI reply.", variant: "destructive" });
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  }
 
   return (
     <div className={`space-y-3 ${isReply ? 'ml-8 border-l-2 border-muted pl-4' : ''}`}>
@@ -128,6 +145,27 @@ function CommentItem({ comment, isReply = false, onReply, onDelete }: CommentIte
                   Reply
                 </Button>
               )}
+              {!isReply && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => onGenerateAi(comment.comment_id, comment.text_original || comment.text_display)}
+                  disabled={!!isGeneratingAi}
+                >
+                  {isGeneratingAi ? (
+                    <>
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      Generating
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      AI
+                    </>
+                  )}
+                </Button>
+              )}
               
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -160,6 +198,29 @@ function CommentItem({ comment, isReply = false, onReply, onDelete }: CommentIte
               </AlertDialog>
             </div>
           </div>
+          
+          {/* AI generated suggestion */}
+          {aiReply && !isReplying && (
+            <div className="mt-3 p-3 bg-muted/40 rounded-lg border border-muted">
+              <div className="text-xs uppercase text-muted-foreground mb-1">AI suggestion</div>
+              <div className="text-sm mb-2 whitespace-pre-wrap">{aiReply}</div>
+              <div className="flex justify-end">
+                <Button size="sm" onClick={handleUseGenerated} disabled={isSubmittingReply}>
+                  {isSubmittingReply ? (
+                    <>
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      Posting...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-3 w-3 mr-1" />
+                      Post
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
           
           {/* Reply Form */}
           {isReplying && (
@@ -221,6 +282,12 @@ export default function CommentsSection({ videoId }: CommentsSectionProps) {
     replyToComment
   } = useComments({ videoId });
 
+  // AI state
+  const [aiReplies, setAiReplies] = useState<Record<string, string>>({})
+  const [generatingFor, setGeneratingFor] = useState<Record<string, boolean>>({})
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false)
+  const [isSavingBulk, setIsSavingBulk] = useState(false)
+
   const handleDeleteComment = async (commentId: string) => {
     try {
       await deleteComment(commentId);
@@ -251,6 +318,8 @@ export default function CommentsSection({ videoId }: CommentsSectionProps) {
   const handleReplyToComment = async (parentCommentId: string, replyText: string) => {
     try {
       await replyToComment({ parent_comment_id: parentCommentId, reply_text: replyText });
+      // Refresh after posting reply
+      await refreshComments();
     } catch (error: any) {
       console.error("Reply to comment error:", error);
       
@@ -262,6 +331,156 @@ export default function CommentsSection({ videoId }: CommentsSectionProps) {
       throw error; // Re-throw to be handled by CommentItem
     }
   };
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://backend.postsiva.com";
+
+  const generateAiForOne = async (commentId: string, commentText: string) => {
+    try {
+      setGeneratingFor(prev => ({ ...prev, [commentId]: true }))
+      const token = localStorage.getItem('auth_token')
+      if (!token) throw new Error('No authentication token found')
+
+      const payload = { comments: [{ comment_id: commentId, comment_text: commentText }] }
+      console.log('[AI][Single] Request → /comments/generate-ai-replies', {
+        url: `${API_BASE_URL}/comments/generate-ai-replies`,
+        payload,
+      })
+
+      const res = await fetch(`${API_BASE_URL}/comments/generate-ai-replies`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      })
+
+      const rawText = await res.clone().text().catch(() => '')
+      console.log('[AI][Single] Response status', res.status, res.statusText)
+      console.log('[AI][Single] Raw body', rawText?.slice(0, 2000))
+
+      if (!res.ok) throw new Error(`AI generation failed: ${res.status}`)
+      const data = await res.json()
+      console.log('[AI][Single] Parsed JSON', data)
+
+      // Extract from documented schema: generated_replies[0].generated_reply
+      const replyText: string | undefined = Array.isArray(data?.generated_replies)
+        ? data.generated_replies[0]?.generated_reply
+        : undefined
+
+      if (!replyText) throw new Error('No AI reply returned')
+
+      console.log('[AI][Single] Extracted reply text (preview)', replyText.slice(0, 200))
+      setAiReplies(prev => ({ ...prev, [commentId]: replyText }))
+    } catch (e: any) {
+      console.error('[AI][Single] Generation error', { message: e?.message, stack: e?.stack })
+      toast({ title: 'AI Error', description: e.message || 'Failed to generate reply', variant: 'destructive' })
+    } finally {
+      setGeneratingFor(prev => ({ ...prev, [commentId]: false }))
+    }
+  }
+
+  const generateAiForAll = async () => {
+    try {
+      setIsGeneratingAll(true)
+      const token = localStorage.getItem('auth_token')
+      if (!token) throw new Error('No authentication token found')
+
+      // Consider only top-level comments for replies
+      const parentComments = comments.filter(c => !c.is_reply)
+      const payload = parentComments.map(c => ({ comment_id: c.comment_id, comment_text: c.text_original || c.text_display }))
+
+      console.log('[AI][Bulk] Request → /comments/generate-ai-replies', {
+        url: `${API_BASE_URL}/comments/generate-ai-replies`,
+        count: payload.length,
+        sample: payload.slice(0, 3),
+      })
+
+      const res = await fetch(`${API_BASE_URL}/comments/generate-ai-replies`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ comments: payload })
+      })
+
+      const rawText = await res.clone().text().catch(() => '')
+      console.log('[AI][Bulk] Response status', res.status, res.statusText)
+      console.log('[AI][Bulk] Raw body', rawText?.slice(0, 2000))
+
+      if (!res.ok) throw new Error(`AI generation failed: ${res.status}`)
+      const data = await res.json()
+      console.log('[AI][Bulk] Parsed JSON', data)
+
+      // Normalize replies from documented schema: generated_replies[{ comment_id, generated_reply }]
+      const map: Record<string, string> = {}
+      if (Array.isArray(data?.generated_replies)) {
+        data.generated_replies.forEach((r: any) => {
+          if (r?.comment_id && r?.generated_reply) map[r.comment_id] = r.generated_reply
+        })
+      }
+
+      console.log('[AI][Bulk] Mapped replies', { count: Object.keys(map).length, keys: Object.keys(map).slice(0, 10) })
+      setAiReplies(map)
+      toast({ title: 'AI Replies Ready', description: 'Review and save the generated replies.' })
+    } catch (e: any) {
+      console.error('[AI][Bulk] Generation error', { message: e?.message, stack: e?.stack })
+      toast({ title: 'AI Error', description: e.message || 'Failed to generate replies', variant: 'destructive' })
+    } finally {
+      setIsGeneratingAll(false)
+    }
+  }
+
+  const saveAllReplies = async () => {
+    try {
+      setIsSavingBulk(true)
+      const token = localStorage.getItem('auth_token')
+      if (!token) throw new Error('No authentication token found')
+
+      const replies = Object.entries(aiReplies)
+        .filter(([_, text]) => !!text && text.trim() !== '')
+        .map(([comment_id, reply_text]) => ({ parent_comment_id: comment_id, reply_text }))
+
+      if (replies.length === 0) {
+        toast({ title: 'No replies to save', description: 'Generate AI replies first.' })
+        return
+      }
+
+      console.log('[AI][SaveAll] Request → /comments/reply-multiple', {
+        url: `${API_BASE_URL}/comments/reply-multiple`,
+        count: replies.length,
+        sample: replies.slice(0, 3),
+      })
+
+      const res = await fetch(`${API_BASE_URL}/comments/reply-multiple`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ replies })
+      })
+
+      const rawText = await res.clone().text().catch(() => '')
+      console.log('[AI][SaveAll] Response status', res.status, res.statusText)
+      console.log('[AI][SaveAll] Raw body', rawText?.slice(0, 2000))
+
+      if (!res.ok) throw new Error(`Failed to save replies: ${res.status}`)
+
+      toast({ title: 'Replies Posted', description: 'All AI replies have been posted.' })
+      setAiReplies({})
+      await refreshComments()
+    } catch (e: any) {
+      console.error('[AI][SaveAll] Error', { message: e?.message, stack: e?.stack })
+      toast({ title: 'Save Error', description: e.message || 'Failed to save replies', variant: 'destructive' })
+    } finally {
+      setIsSavingBulk(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -331,10 +550,37 @@ export default function CommentsSection({ videoId }: CommentsSectionProps) {
             Comments
             <Badge variant="secondary">{totalComments}</Badge>
           </CardTitle>
-          <Button onClick={refreshComments} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={refreshComments} variant="outline" size="sm">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+            <Button size="sm" onClick={generateAiForAll} disabled={isGeneratingAll}>
+              {isGeneratingAll ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Reply with AI
+                </>
+              )}
+            </Button>
+            {Object.keys(aiReplies).length > 0 && (
+              <Button size="sm" variant="outline" onClick={saveAllReplies} disabled={isSavingBulk}>
+                {isSavingBulk ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save all'
+                )}
+              </Button>
+            )}
+          </div>
         </div>
         <CardDescription>
           Comments from YouTube viewers
@@ -354,6 +600,9 @@ export default function CommentsSection({ videoId }: CommentsSectionProps) {
                   comment={comment} 
                   onReply={handleReplyToComment}
                   onDelete={handleDeleteComment}
+                  onGenerateAi={generateAiForOne}
+                  aiReply={aiReplies[comment.comment_id]}
+                  isGeneratingAi={!!generatingFor[comment.comment_id]}
                 />
                 {getRepliesForComment(comment.comment_id).map((reply) => (
                   <CommentItem 
@@ -362,6 +611,7 @@ export default function CommentsSection({ videoId }: CommentsSectionProps) {
                     isReply 
                     onReply={handleReplyToComment}
                     onDelete={handleDeleteComment}
+                    onGenerateAi={async () => {}}
                   />
                 ))}
               </div>
