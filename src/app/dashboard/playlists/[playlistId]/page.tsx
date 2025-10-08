@@ -13,6 +13,8 @@ import { useState, useMemo } from "react"
 import RefreshButton from "@/components/ui/refresh-button"
 import usePlaylistVideos from "@/lib/hooks/dashboard/playlists/usePlaylistVideos"
 import { mapApiErrorToMessage } from "@/lib/utils"
+import VideoCard from "@/components/dashboard/youtube-videos/components/VideoCard"
+import { VideoData } from "@/types/dashboard/youtube-videos"
 
 // Helper functions
 const formatDuration = (duration: string) => {
@@ -65,6 +67,83 @@ const getHealthColor = (level?: string) => {
   }
 }
 
+const daysSince = (dateString: string): number => {
+  const d = new Date(dateString).getTime()
+  if (!d) return 0
+  const diff = Date.now() - d
+  return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)))
+}
+
+// Map playlist analytics/top video to VideoData for the shared VideoCard
+const toVideoDataFromAnalytics = (v: any): VideoData => ({
+  video_id: v.video_id,
+  title: v.title || "",
+  description: v.description || "",
+  thumbnail_url: v.thumbnail_url || "",
+  published_at: v.published_at,
+  channel_title: v.channel_title || "",
+  tags: v.tags || [],
+  view_count: v.views ?? v.view_count ?? 0,
+  like_count: v.likes ?? v.like_count ?? 0,
+  comment_count: v.comments ?? v.comment_count ?? 0,
+  duration: v.duration || "",
+  duration_seconds: v.duration_seconds ?? 0,
+  privacy_status: v.privacy_status || "public",
+  analytics: {
+    view_count: v.views ?? v.view_count ?? 0,
+    like_count: v.likes ?? v.like_count ?? 0,
+    comment_count: v.comments ?? v.comment_count ?? 0,
+    duration: v.duration || "",
+    duration_seconds: v.duration_seconds ?? 0,
+    privacy_status: v.privacy_status || "public",
+    published_at: v.published_at,
+    title: v.title || "",
+    description: v.description || "",
+    tags: v.tags || [],
+    category_id: v.category_id || "",
+    default_language: null,
+    default_audio_language: null,
+  },
+  engagement_rate: v.engagement_rate ?? 0,
+  performance_score: v.performance_score ?? 0,
+  days_since_published: daysSince(v.published_at),
+})
+
+// Map playlist videos list item to VideoData
+const toVideoDataFromList = (v: any): VideoData => ({
+  video_id: v.video_id,
+  title: v.title || "",
+  description: v.description || "",
+  thumbnail_url: v.thumbnail_url || "",
+  published_at: v.published_at,
+  channel_title: v.channel_title || "",
+  tags: v.tags || [],
+  view_count: v.view_count ?? 0,
+  like_count: v.like_count ?? 0,
+  comment_count: v.comment_count ?? 0,
+  duration: v.duration || "",
+  duration_seconds: v.duration_seconds ?? 0,
+  privacy_status: v.privacy_status || "public",
+  analytics: {
+    view_count: v.view_count ?? 0,
+    like_count: v.like_count ?? 0,
+    comment_count: v.comment_count ?? 0,
+    duration: v.duration || "",
+    duration_seconds: v.duration_seconds ?? 0,
+    privacy_status: v.privacy_status || "public",
+    published_at: v.published_at,
+    title: v.title || "",
+    description: v.description || "",
+    tags: v.tags || [],
+    category_id: v.category_id || "",
+    default_language: null,
+    default_audio_language: null,
+  },
+  engagement_rate: v.engagement_rate ?? 0,
+  performance_score: v.performance_score ?? 0,
+  days_since_published: daysSince(v.published_at),
+})
+
 export default function PlaylistVideosPage() {
   const params = useParams()
   const playlistId = params.playlistId as string
@@ -82,6 +161,14 @@ export default function PlaylistVideosPage() {
   const { playlistData, isLoading, error, refetch: refetchAnalytics } = usePlaylistAnalytics(playlistId)
   const { playlistData: playlistVideos, isLoading: isVideosLoading, error: videosError, refetch: refetchVideos } = usePlaylistVideos(playlistId)
 
+  // Build a quick lookup map for details by video_id (to enrich analytics items)
+  const detailsById = useMemo(() => {
+    const m: Record<string, any> = {}
+    const list = playlistVideos?.data || []
+    list.forEach(item => { m[item.video_id] = item })
+    return m
+  }, [playlistVideos?.data])
+
   // Create video list from top performing videos (always run this hook)
   const videos = useMemo(() => {
     const analytics = playlistData?.data?.analytics
@@ -93,8 +180,26 @@ export default function PlaylistVideosPage() {
       analytics.top_performing_videos.top_by_performance_score
     ].filter((video, index, self) =>
       index === self.findIndex(v => v.video_id === video.video_id)
-    );
-  }, [playlistData?.data?.analytics?.top_performing_videos]);
+    ).map(v => {
+      const base = toVideoDataFromAnalytics(v)
+      const details = detailsById[v.video_id]
+      if (details) {
+        // Enrich with description and other fields if missing
+        return {
+          ...base,
+          description: details.description || base.description,
+          thumbnail_url: base.thumbnail_url || details.thumbnail_url || "",
+          view_count: base.view_count || details.view_count || 0,
+          like_count: base.like_count || details.like_count || 0,
+          comment_count: base.comment_count || details.comment_count || 0,
+          duration: base.duration || details.duration || "",
+          duration_seconds: base.duration_seconds || details.duration_seconds || 0,
+          privacy_status: base.privacy_status || details.privacy_status || "public",
+        } as VideoData
+      }
+      return base
+    });
+  }, [playlistData?.data?.analytics?.top_performing_videos, detailsById]);
 
   // Filter and sort videos (always run this hook)
   const filteredAndSortedVideos = useMemo(() => {
@@ -119,12 +224,12 @@ export default function PlaylistVideosPage() {
       
       switch (sortBy) {
         case "views":
-          aValue = a.views
-          bValue = b.views
+          aValue = a.view_count
+          bValue = b.view_count
           break
         case "likes":
-          aValue = a.likes
-          bValue = b.likes
+          aValue = a.like_count
+          bValue = b.like_count
           break
         case "performance_score":
           aValue = a.performance_score
@@ -428,80 +533,7 @@ export default function PlaylistVideosPage() {
         <h3 className="text-xl font-bold mb-4">Top Performing Videos</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAndSortedVideos.map((video) => (
-            <Card key={video.video_id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-0">
-                <div className="relative">
-                  <img
-                    src={video.thumbnail_url || "/placeholder.svg"}
-                    alt={video.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute bottom-2 right-2 bg-black/80 text-white px-2 py-1 rounded text-sm">
-                    {formatDuration(video.duration)}
-                  </div>
-                  <div className="absolute top-2 right-2">
-                    <Button size="sm" asChild variant="secondary" className="bg-black/80 hover:bg-black/60">
-                      <Link href={video.youtube_url} target="_blank">
-                        <ExternalLink className="w-4 h-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="p-4 space-y-3">
-                  <div>
-                    <h3 className="font-semibold text-sm line-clamp-2 mb-2">{video.title}</h3>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="text-center">
-                      <div className="font-medium">{video.views.toLocaleString()}</div>
-                      <div className="text-muted-foreground">Views</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium">{video.likes}</div>
-                      <div className="text-muted-foreground">Likes</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium">{video.comments}</div>
-                      <div className="text-muted-foreground">Comments</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-muted-foreground">{formatDate(video.published_at)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs ${getPerformanceColor(video.performance_score)}`}
-                      >
-                        {video.performance_score.toFixed(1)}
-                      </Badge>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs ${getEngagementColor(video.engagement_rate)}`}
-                      >
-                        {video.engagement_rate.toFixed(1)}%
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button asChild size="sm" className="flex-1 crypto-button-primary">
-                      <Link href={`/dashboard/videos/${video.video_id}`}>
-                        View Details
-                      </Link>
-                    </Button>
-                    <Button asChild size="sm" variant="outline">
-                      <a href={video.youtube_url || '#'} target="_blank" rel="noreferrer">Watch</a>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <VideoCard key={video.video_id} video={video as VideoData} />
           ))}
         </div>
       </div>
@@ -526,41 +558,7 @@ export default function PlaylistVideosPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {playlistVideos.data.map((v) => (
-                  <Card key={v.video_id} className="overflow-hidden hover:shadow-md transition-shadow">
-                    <CardContent className="p-0">
-                      <div className="relative">
-                        <img src={v.thumbnail_url || "/placeholder.svg"} alt={v.title} className="w-full h-44 object-cover" />
-                        <div className="absolute bottom-2 right-2 bg-black/80 text-white px-2 py-1 rounded text-xs">
-                          {formatDuration(v.duration)}
-                        </div>
-                      </div>
-                      <div className="p-4 space-y-3">
-                        <h4 className="font-semibold text-sm line-clamp-2">{v.title}</h4>
-                        <div className="grid grid-cols-3 gap-2 text-xs">
-                          <div className="text-center">
-                            <div className="font-medium">{v.view_count.toLocaleString()}</div>
-                            <div className="text-muted-foreground">Views</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="font-medium">{v.like_count}</div>
-                            <div className="text-muted-foreground">Likes</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="font-medium">{v.comment_count}</div>
-                            <div className="text-muted-foreground">Comments</div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button asChild size="sm" className="flex-1 crypto-button-primary">
-                            <Link href={`/dashboard/videos/${v.video_id}`}>View Details</Link>
-                          </Button>
-                          <Button asChild size="sm" variant="outline">
-                            <a href={v.youtube_url || v.url || '#'} target="_blank" rel="noreferrer">Watch</a>
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <VideoCard key={v.video_id} video={toVideoDataFromList(v)} />
                 ))}
               </div>
             )}
