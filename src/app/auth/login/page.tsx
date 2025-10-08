@@ -16,8 +16,17 @@ import { Play, Eye, EyeOff, Loader2 } from "lucide-react"
 import useAuth from "@/lib/hooks/auth/useAuth"
 import dynamic from "next/dynamic"
 const GoogleLoginButton = dynamic(() => import("@/components/auth/GoogleLoginButton"), { ssr: false })
+import { SessionConflictDialog } from "@/components/auth/SessionConflictDialog"
 import { useToast } from "@/lib/hooks/common/useToast"
 import { cn } from "@/lib/utils"
+import { 
+  generateSessionId, 
+  setSessionId, 
+  setActiveUserId,
+  removeSessionId,
+  removeActiveUserId,
+  getUserData
+} from "@/lib/auth"
 
 function LoginContent() {
   const [email, setEmail] = useState("")
@@ -26,6 +35,9 @@ function LoginContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
   const [error, setError] = useState("")
+  const [showConflictDialog, setShowConflictDialog] = useState(false)
+  const [conflictInfo, setConflictInfo] = useState<{ currentEmail: string; newEmail: string } | null>(null)
+  const [pendingLoginData, setPendingLoginData] = useState<{ email: string; password: string } | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { login, isAuthenticated } = useAuth()
@@ -39,6 +51,20 @@ function LoginContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Check if there's already an active session with a different user
+    const existingUser = getUserData()
+    if (existingUser && existingUser.email && existingUser.email !== email) {
+      console.log('⚠️ Detected login attempt with different account')
+      setConflictInfo({
+        currentEmail: existingUser.email,
+        newEmail: email
+      })
+      setPendingLoginData({ email, password })
+      setShowConflictDialog(true)
+      return
+    }
+    
     setIsSubmitting(true)
     setError("")
 
@@ -63,6 +89,44 @@ function LoginContent() {
     }
   }
 
+  const handleConfirmSwitch = async () => {
+    setShowConflictDialog(false)
+    
+    if (!pendingLoginData) return
+    
+    setIsSubmitting(true)
+    setError("")
+
+    try {
+      await login(pendingLoginData)
+      setRedirecting(true)
+      router.replace("/auth/youtube-connect")
+    } catch (err: any) {
+      let message = "Login failed. Please try again."
+      const axiosErr = err as AxiosError<any>
+      const status = axiosErr?.response?.status
+      const apiDetail = (axiosErr?.response?.data as any)?.detail
+      if (status === 401) message = "Invalid email or password."
+      else if (status === 429) message = "Too many attempts. Please wait a moment and try again."
+      else if (status === 500) message = "Server error during login. Please try again later."
+      else if (apiDetail) message = String(apiDetail)
+      else if (axiosErr?.message) message = axiosErr.message
+      setError(message)
+      toast({ title: "Login failed", description: message, variant: "destructive" })
+    } finally {
+      setIsSubmitting(false)
+      setPendingLoginData(null)
+      setConflictInfo(null)
+    }
+  }
+
+  const handleCancelSwitch = () => {
+    setShowConflictDialog(false)
+    setPendingLoginData(null)
+    setConflictInfo(null)
+    toast({ title: "Login cancelled", description: "You remain logged in with your current account." })
+  }
+
   useEffect(() => {
     router.prefetch('/dashboard')
     router.prefetch('/auth/youtube-connect')
@@ -73,12 +137,34 @@ function LoginContent() {
     const token = localStorage.getItem('auth_token')
     if (!token) return
     const userData = localStorage.getItem('user_data')
+    const sessionId = localStorage.getItem('session_id')
+    const activeUserId = localStorage.getItem('active_user_id')
+    
+    // If missing session data, create it
+    if (!sessionId || !activeUserId) {
+      console.log('🔧 Missing session data, regenerating...')
+      const newSessionId = generateSessionId()
+      setSessionId(newSessionId)
+      
+      if (userData) {
+        try {
+          const user = JSON.parse(userData)
+          setActiveUserId(user.id)
+        } catch (error) {
+          console.error('❌ Error parsing user data:', error)
+        }
+      }
+    }
+    
     if (!userData) {
       const minimalUser = {
         id: 'user', email: '', username: '', full_name: '', is_active: true,
         created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
       }
-      try { localStorage.setItem('user_data', JSON.stringify(minimalUser)) } catch {}
+      try { 
+        localStorage.setItem('user_data', JSON.stringify(minimalUser))
+        setActiveUserId(minimalUser.id)
+      } catch {}
     }
     setRedirecting(true)
     router.replace('/auth/youtube-connect')
@@ -91,7 +177,35 @@ function LoginContent() {
     const emailFromUrl = searchParams.get('email')
     if (!tokenFromUrl) return
 
+    // Check if there's an existing session with a different user
+    const existingToken = localStorage.getItem('auth_token')
+    const existingUser = localStorage.getItem('user_data')
+    
+    if (existingToken && existingUser && emailFromUrl) {
+      try {
+        const existingUserData = JSON.parse(existingUser)
+        if (existingUserData.email !== emailFromUrl) {
+          console.warn('⚠️ Login from URL with different account detected')
+          console.warn(`⚠️ Current user: ${existingUserData.email}, New user: ${emailFromUrl}`)
+          
+          // Force logout of existing session
+          console.log('🔒 Forcing logout of existing session before URL-based login')
+          removeSessionId()
+          removeActiveUserId()
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('user_data')
+          localStorage.removeItem('user_id')
+        }
+      } catch (error) {
+        console.error('❌ Error checking existing session:', error)
+      }
+    }
+
     try {
+      // Generate new session ID
+      const newSessionId = generateSessionId()
+      console.log('🆔 Generated new session ID for URL-based login:', newSessionId)
+      
       localStorage.setItem('auth_token', tokenFromUrl)
       if (userFromUrl || emailFromUrl) {
         const minimalUser = {
@@ -104,7 +218,13 @@ function LoginContent() {
           updated_at: new Date().toISOString(),
         }
         localStorage.setItem('user_data', JSON.stringify(minimalUser))
+        
+        // Save session data
+        setSessionId(newSessionId)
+        setActiveUserId(minimalUser.id)
       }
+      
+      console.log('✅ URL-based authentication successful with session tracking')
     } catch {}
 
     try {
@@ -137,6 +257,17 @@ function LoginContent() {
       <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <>
+        {/* Session Conflict Dialog */}
+        {conflictInfo && (
+          <SessionConflictDialog
+            open={showConflictDialog}
+            currentUserEmail={conflictInfo.currentEmail}
+            newUserEmail={conflictInfo.newEmail}
+            onConfirm={handleConfirmSwitch}
+            onCancel={handleCancelSwitch}
+          />
+        )}
+        
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2 group">

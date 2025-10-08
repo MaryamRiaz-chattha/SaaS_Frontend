@@ -1,5 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
+import { 
+  generateSessionId, 
+  setSessionId, 
+  removeSessionId,
+  setActiveUserId,
+  removeActiveUserId,
+  hasSessionConflict,
+  validateSession,
+  getSessionId,
+  getActiveUserId
+} from '@/lib/auth'
 
 export interface User {
   id: string
@@ -112,18 +123,36 @@ export default function useAuth() {
     isLoading: true,
   })
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from localStorage with session validation
   useEffect(() => {
     if (DEBUG_LOGS) console.log('🔄 Initializing auth state from localStorage...')
     const token = localStorage.getItem('auth_token')
     const user = localStorage.getItem('user_data')
     
-    if (DEBUG_LOGS) console.log('📦 localStorage data:', { token: token ? 'exists' : 'not found', user: user ? 'exists' : 'not found' })
+    if (DEBUG_LOGS) console.log('📦 localStorage data:', { 
+      token: token ? 'exists' : 'not found', 
+      user: user ? 'exists' : 'not found',
+      sessionId: getSessionId() ? 'exists' : 'not found',
+      activeUserId: getActiveUserId() ? 'exists' : 'not found'
+    })
     
     if (token && user) {
       try {
         const userData = JSON.parse(user)
         if (DEBUG_LOGS) console.log('👤 Parsed user data:', userData)
+        
+        // Validate session
+        const sessionValidation = validateSession()
+        
+        if (!sessionValidation.valid) {
+          console.warn('⚠️ Session validation failed:', sessionValidation.reason)
+          console.warn('🔒 Forcing logout due to invalid session')
+          logout()
+          return
+        }
+        
+        if (DEBUG_LOGS) console.log('✅ Session validation successful')
+        
         setAuthState({
           user: userData,
           token,
@@ -183,6 +212,32 @@ export default function useAuth() {
   const login = useCallback(async (data: LoginData): Promise<AuthResponse> => {
     if (DEBUG_LOGS) console.log('🔐 Starting login process with email:', data.email)
     
+    // Check if there's already an active session
+    const existingToken = localStorage.getItem('auth_token')
+    const existingUser = localStorage.getItem('user_data')
+    
+    if (existingToken && existingUser) {
+      try {
+        const existingUserData = JSON.parse(existingUser)
+        
+        // Check if trying to login with a different account
+        if (existingUserData.email !== data.email) {
+          console.warn('⚠️ Attempting to login with different account while already logged in')
+          console.warn(`⚠️ Current user: ${existingUserData.email}, New login: ${data.email}`)
+          
+          // Force logout of existing session
+          console.log('🔒 Forcing logout of existing session before new login')
+          removeSessionId()
+          removeActiveUserId()
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('user_data')
+          localStorage.removeItem('user_id')
+        }
+      } catch (error) {
+        console.error('❌ Error checking existing session:', error)
+      }
+    }
+    
     try {
       if (DEBUG_LOGS) console.log('📤 Sending login request...')
       
@@ -193,10 +248,19 @@ export default function useAuth() {
         user: response.data.user,
       })
       
+      // Generate new session ID
+      const newSessionId = generateSessionId()
+      console.log('🆔 Generated new session ID:', newSessionId)
+      
       // Save auth data to localStorage
       localStorage.setItem('auth_token', response.data.access_token)
       localStorage.setItem('user_data', JSON.stringify(response.data.user))
-      if (DEBUG_LOGS) console.log('💾 Saved auth data to localStorage')
+      
+      // Save session data
+      setSessionId(newSessionId)
+      setActiveUserId(response.data.user.id)
+      
+      if (DEBUG_LOGS) console.log('💾 Saved auth data and session to localStorage')
       
       // Update auth state
       setAuthState({
@@ -231,11 +295,19 @@ export default function useAuth() {
   }, [])
 
   const logout = useCallback(() => {
+    console.log('🔓 Logging out user...')
+    
+    // Clear session data first
+    removeSessionId()
+    removeActiveUserId()
+    
     // Clear all localStorage items related to the application
     const itemsToRemove = [
       'auth_token',
       'user_data', 
       'user_id',
+      'session_id',
+      'active_user_id',
       'gemini_api_key',
       'current_video_data',
       'current_video_id',
@@ -257,10 +329,13 @@ export default function useAuth() {
           key.includes('video') || 
           key.includes('youtube') || 
           key.includes('gemini') ||
-          key.includes('credential')) {
+          key.includes('credential') ||
+          key.includes('session')) {
         localStorage.removeItem(key)
       }
     })
+    
+    console.log('✅ Cleared all session and auth data')
     
     // Reset auth state
     setAuthState({

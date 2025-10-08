@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Sidebar } from "@/components/Sidebar"
 import { DashboardHeader } from "@/components/DashboardHeader"
+import { SessionMonitor } from "@/components/SessionMonitor"
 import { useAuth } from "@/lib/hooks/auth"
 
 export default function DashboardLayout({
@@ -67,6 +68,9 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen crypto-gradient-bg">
+      {/* Session Monitor - monitors for concurrent logins */}
+      <SessionMonitor />
+      
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 z-50 crypto-navbar">
         <DashboardHeader />

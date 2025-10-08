@@ -2,6 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { 
+  generateSessionId, 
+  setSessionId, 
+  setActiveUserId,
+  removeSessionId,
+  removeActiveUserId
+} from '@/lib/auth';
 
 interface GoogleAuthStatus {
   google_oauth_configured: boolean;
@@ -108,13 +115,48 @@ const useGoogleAuth = () => {
       const authData: GoogleAuthResponse = await response.json();
       
       if (authData.success && authData.token) {
+        // Check if there's already an active session with a different user
+        const existingToken = localStorage.getItem('auth_token')
+        const existingUser = localStorage.getItem('user_data')
+        
+        if (existingToken && existingUser && authData.user) {
+          try {
+            const existingUserData = JSON.parse(existingUser)
+            if (existingUserData.email !== authData.user.email) {
+              console.warn('⚠️ Google login with different account detected')
+              console.warn(`⚠️ Current user: ${existingUserData.email}, New user: ${authData.user.email}`)
+              
+              // Force logout of existing session
+              console.log('🔒 Forcing logout of existing session before Google login')
+              removeSessionId()
+              removeActiveUserId()
+              localStorage.removeItem('auth_token')
+              localStorage.removeItem('user_data')
+              localStorage.removeItem('user_id')
+            }
+          } catch (error) {
+            console.error('❌ Error checking existing session:', error)
+          }
+        }
+        
+        // Generate new session ID
+        const newSessionId = generateSessionId()
+        console.log('🆔 Generated new session ID for Google login:', newSessionId)
+        
         // Store the authentication token
         localStorage.setItem('auth_token', authData.token);
         
         // Store user info if available
         if (authData.user) {
+          localStorage.setItem('user_data', JSON.stringify(authData.user));
           localStorage.setItem('user_info', JSON.stringify(authData.user));
+          
+          // Save session data
+          setSessionId(newSessionId)
+          setActiveUserId(authData.user.id)
         }
+        
+        console.log('✅ Google authentication successful with session tracking')
 
         // Get the redirect URL from localStorage
         const redirectUrl = localStorage.getItem('google_auth_redirect');

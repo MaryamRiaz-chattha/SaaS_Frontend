@@ -313,7 +313,7 @@ export default function FeaturesPage() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/about">Learn More</Link>
+                <Link href="/about-page">Learn More</Link>
               </Button>
             </div>
           </div>

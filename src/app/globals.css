@@ -165,6 +165,11 @@
   --navbar-bg: rgba(26, 26, 26, 0.8);
   --navbar-backdrop: rgba(26, 26, 26, 0.6);
   --navbar-border: rgba(64, 64, 64, 0.6);
+  
+  /* Footer tokens for dark mode */
+  --footer-bg: #1A1A1A;
+  --footer-text: #A0A0A0;
+  --footer-links: #FFFFFF;
 }
 
 @theme inline {
@@ -492,6 +497,30 @@
   /* Smooth scrolling for main content */
   .overflow-y-auto {
     scroll-behavior: smooth;
+  }
+  
+  /* Hide scrollbar for mobile step indicators */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* Thin scrollbar for sidebar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--border-primary);
+    border-radius: 3px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-primary);
   }
   
   /* Custom scrollbar styling */

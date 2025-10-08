@@ -180,7 +180,7 @@ export default function AboutPage() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/features">Learn More</Link>
+                <Link href="/feature-showcase">Learn More</Link>
               </Button>
             </div>
           </div>

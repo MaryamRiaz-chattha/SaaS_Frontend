@@ -27,7 +27,7 @@ export function HeroSection() {
         </Link>
       </Button>
       <Button size="lg" variant="cryptoSecondary" className="text-lg px-8 py-6 text-[#d71919]" asChild>
-        <Link href="#how-it-works">See How It Works</Link>
+        <Link href="/#how-it-works">See How It Works</Link>
       </Button>
     </div>
   </div>
