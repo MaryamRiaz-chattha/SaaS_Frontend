@@ -45,7 +45,7 @@ function LoginContent() {
 
   const renderFullScreenLoader = () => (
     <div className="min-h-screen crypto-gradient-bg flex items-center justify-center p-4">
-      <Loader2 className="h-6 w-6 animate-spin" />
+      <span className="inline-block animate-spin rounded-full" style={{ width: 24, height: 24, borderWidth: 3, borderColor: "var(--brand-primary) transparent transparent transparent" }} />
     </div>
   )
 
@@ -226,6 +226,36 @@ function LoginContent() {
       
       console.log('✅ URL-based authentication successful with session tracking')
     } catch {}
+
+    // Quietly fetch and cache Gemini API key (non-blocking, ignore errors)
+    ;(async () => {
+      try {
+        const res = await fetch('https://backend.postsiva.com/gemini-keys/', {
+          method: 'GET',
+          headers: {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${tokenFromUrl}`
+          },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data) {
+            if (data.api_key_preview) {
+              localStorage.setItem('gemini_api_key_preview', String(data.api_key_preview))
+            }
+            localStorage.setItem('has_gemini_key', String(!!(data.api_key_preview || data.is_active)))
+            console.log('🔑 Cached Gemini key presence from server (URL token)')
+          } else {
+            localStorage.setItem('has_gemini_key', 'false')
+            localStorage.removeItem('gemini_api_key_preview')
+            console.log('ℹ️ No Gemini key found (null) [URL token]')
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Gemini key fetch failed after URL login (ignored)')
+      }
+    })()
 
     try {
       const url = new URL(window.location.href)

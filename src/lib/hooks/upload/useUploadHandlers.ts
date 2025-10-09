@@ -58,8 +58,8 @@ export const useUploadHandlers = ({
     if (!file) return
 
     // Check if Gemini API key exists before allowing upload
-    const geminiKey = localStorage.getItem('gemini_api_key')
-    if (!geminiKey || geminiKey.trim() === '') {
+    const hasGeminiKey = localStorage.getItem('has_gemini_key') === 'true'
+    if (!hasGeminiKey) {
       toast({
         title: "Gemini API Key Required",
         description: "Please go to Settings and enter your Gemini API key before uploading videos.",

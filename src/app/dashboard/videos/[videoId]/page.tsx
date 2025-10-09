@@ -8,10 +8,15 @@ import { asNumber } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, Eye, MessageCircle, ThumbsUp, Calendar, Clock, Tag, ExternalLink, TrendingUp, TrendingDown, Target, Activity, BarChart3, Lightbulb, ChevronDown, ChevronUp } from "lucide-react"
+import { ArrowLeft, Eye, MessageCircle, ThumbsUp, Calendar, Clock, Tag, ExternalLink, TrendingUp, TrendingDown, Target, Activity, BarChart3, Lightbulb, ChevronDown, ChevronUp, Pencil } from "lucide-react"
 import Link from "next/link"
 import CommentsSection from "@/components/dashboard/videos/CommentsSection"
 import RefreshButton from "@/components/ui/refresh-button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Helper functions
 const formatDuration = (duration: string) => {
@@ -77,8 +82,66 @@ export default function VideoDetailPage() {
   const router = useRouter();
   const videoId = params.videoId as string;
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editPrivacy, setEditPrivacy] = useState("");
+  const [isEditDescExpanded, setIsEditDescExpanded] = useState(false);
   
   const { data, video: videoData, isLoading, error, refetch } = useVideo(videoId);
+
+  // Prefill edit form when opening
+  useEffect(() => {
+    if (isEditOpen && videoData) {
+      setEditTitle(videoData.title || "");
+      setEditDescription(videoData.description || "");
+      setEditPrivacy(videoData.privacy_status || "public");
+    }
+  }, [isEditOpen, videoData]);
+
+  const handleOpenEdit = () => {
+    setEditError(null);
+    setIsEditOpen(true);
+  }
+
+  const handleUpdateVideo = async () => {
+    if (!videoId) return;
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const endpoint = `https://backend.postsiva.com/single-video/${videoId}`
+      const body: any = {
+        title: editTitle,
+        description: editDescription,
+        privacy_status: editPrivacy,
+      }
+      const res = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        throw new Error(`Update failed (${res.status}): ${text || res.statusText}`)
+      }
+
+      // Refresh data
+      await refetch()
+      setIsEditOpen(false)
+    } catch (e: any) {
+      setEditError(e?.message || 'Failed to update video')
+    } finally {
+      setEditLoading(false)
+    }
+  }
 
   // Update page title when video data loads
   useEffect(() => {
@@ -150,12 +213,16 @@ export default function VideoDetailPage() {
             <p className="text-muted-foreground mt-1">Comprehensive video analytics and insights</p>
           </div>
         </div>
-        <div className="flex justify-end">
+        <div className="flex items-center gap-2">
           <RefreshButton 
             onRefresh={refetch}
             variant="outline"
             size="sm"
           />
+          <Button size="sm" variant="crypto" onClick={handleOpenEdit}>
+            <Pencil className="w-4 h-4 mr-2" />
+            Edit Video
+          </Button>
         </div>
       </div>
 
@@ -175,7 +242,7 @@ export default function VideoDetailPage() {
                 </div>
                 <div className="absolute top-4 right-4">
                   <Button size="sm" asChild className="crypto-button-primary">
-                    <Link href={videoData.youtube_url || videoData.analytics?.url || `https://www.youtube.com/watch?v=${videoData.video_id}`} target="_blank">
+                    <Link href={videoData.youtube_url || `https://www.youtube.com/watch?v=${videoData.video_id}`} target="_blank">
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Watch on YouTube
                     </Link>
@@ -330,6 +397,54 @@ export default function VideoDetailPage() {
           <CommentsSection videoId={videoId} />
         </div>
       </div>
+
+      {/* Edit Modal */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-lg w-full max-h-[85vh] p-0">
+          <DialogHeader className="px-6 pt-6 pb-2">
+            <DialogTitle>Edit Video</DialogTitle>
+          </DialogHeader>
+          <div className="px-6 pb-4 overflow-y-auto max-h-[60vh] space-y-4">
+            {editError ? (
+              <div className="text-sm text-red-600">{editError}</div>
+            ) : null}
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <Input id="title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="privacy">Privacy Status</Label>
+              <Select value={editPrivacy} onValueChange={setEditPrivacy}>
+                <SelectTrigger id="privacy" className="w-full">
+                  <SelectValue placeholder="Select privacy" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                  <SelectItem value="unlisted">Unlisted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <div className={`transition-all duration-300 ${isEditDescExpanded ? '' : 'max-h-28 overflow-hidden'}`}>
+                <Textarea id="description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={isEditDescExpanded ? 10 : 3} className="w-full resize-y" />
+              </div>
+              <div className="flex justify-end">
+                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setIsEditDescExpanded(!isEditDescExpanded)}>
+                  {isEditDescExpanded ? 'View less' : 'View more'}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="px-6 py-4 border-t border-[var(--border-primary)]">
+            <Button variant="outline" onClick={() => setIsEditOpen(false)} disabled={editLoading}>Cancel</Button>
+            <Button onClick={handleUpdateVideo} disabled={editLoading} className="crypto-button-primary">
+              {editLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

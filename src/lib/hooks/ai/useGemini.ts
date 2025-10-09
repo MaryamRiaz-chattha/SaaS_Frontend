@@ -137,12 +137,16 @@ export default function useGemini() {
         keys: Object.keys(res.data || {}),
         id: res.data?.id,
         user_id: res.data?.user_id,
-        hasApiKey: !!res.data?.api_key,
+        hasPreview: !!res.data?.api_key_preview,
+        is_active: res.data?.is_active,
       })
 
-      // Also save to localStorage for immediate use
-      if (res.data?.api_key) {
-        localStorage.setItem('gemini_api_key', res.data.api_key)
+      // Save preview/presence to localStorage for immediate use (no raw key)
+      if (res.data) {
+        if (res.data.api_key_preview) {
+          localStorage.setItem('gemini_api_key_preview', String(res.data.api_key_preview))
+        }
+        localStorage.setItem('has_gemini_key', String(!!(res.data.api_key_preview || res.data.is_active)))
       }
       
       return res.data

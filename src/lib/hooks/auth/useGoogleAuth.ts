@@ -167,6 +167,34 @@ const useGoogleAuth = () => {
           ? redirectUrl 
           : '/dashboard';
         
+        // Quietly fetch and cache Gemini API key (non-blocking, ignore errors)
+        try {
+          const res = await fetch('https://backend.postsiva.com/gemini-keys/', {
+            method: 'GET',
+            headers: {
+              'accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authData.token}`
+            },
+          })
+          if (res.ok) {
+            const data = await res.json()
+            if (data) {
+              if (data.api_key_preview) {
+                localStorage.setItem('gemini_api_key_preview', String(data.api_key_preview))
+              }
+              localStorage.setItem('has_gemini_key', String(!!(data.api_key_preview || data.is_active)))
+              console.log('🔑 Cached Gemini key presence from server (Google auth)')
+            } else {
+              localStorage.setItem('has_gemini_key', 'false')
+              localStorage.removeItem('gemini_api_key_preview')
+              console.log('ℹ️ No Gemini key found (null) [Google auth]')
+            }
+          }
+        } catch (e) {
+          console.warn('⚠️ Gemini key fetch failed after Google login (ignored)')
+        }
+
         router.push(targetUrl);
         
         return authData;

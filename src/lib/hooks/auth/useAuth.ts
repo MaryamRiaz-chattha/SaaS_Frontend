@@ -270,6 +270,29 @@ export default function useAuth() {
         isLoading: false,
       })
       if (DEBUG_LOGS) console.log('🔄 Updated auth state to authenticated')
+
+      // Quietly fetch and cache Gemini API key (non-blocking, ignore errors)
+      ;(async () => {
+        try {
+          const headers = getAuthHeaders()
+          const res = await api.get('/gemini-keys/', { headers })
+          const data = res?.data as any
+          if (data) {
+            if (data.api_key_preview) {
+              localStorage.setItem('gemini_api_key_preview', String(data.api_key_preview))
+            }
+            localStorage.setItem('has_gemini_key', String(!!(data.api_key_preview || data.is_active)))
+            if (DEBUG_LOGS) console.log('🔑 Cached Gemini key presence from server')
+          } else {
+            // Explicitly clear presence when API returns null
+            localStorage.setItem('has_gemini_key', 'false')
+            localStorage.removeItem('gemini_api_key_preview')
+            if (DEBUG_LOGS) console.log('ℹ️ No Gemini key found (null)')
+          }
+        } catch (e) {
+          if (DEBUG_LOGS) console.warn('⚠️ Gemini key fetch failed (ignored)')
+        }
+      })()
       
       return response.data
     } catch (error: any) {
