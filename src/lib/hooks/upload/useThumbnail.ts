@@ -58,6 +58,7 @@ export default function useThumbnail() {
     headers: {
       accept: 'application/json',
     },
+    timeout: 60000, // 60 second timeout for thumbnail generation
   })
 
   const generateSingleThumbnail = useCallback(async (videoId: string): Promise<ThumbnailGenerateResponse | undefined> => {
@@ -70,7 +71,11 @@ export default function useThumbnail() {
       hasAuthHeader: !!(headers as any)?.Authorization,
     })
 
-    const res = await axiosInstance.post(url, '', { headers })
+    // Add timeout for faster failure detection
+    const res = await axiosInstance.post(url, '', { 
+      headers,
+      timeout: 30000 // 30 second timeout
+    })
     
     console.log('[Thumbnail][Single Generate] Response', {
       status: res.status,
@@ -109,25 +114,32 @@ export default function useThumbnail() {
     try {
       console.log('[Thumbnail][Batch Generate] Starting generation of 5 thumbnails for video:', videoId)
 
-      // Generate 5 thumbnails by calling the API 5 times
-      const promises = Array.from({ length: 5 }, async (_, index) => {
+      // Generate 5 thumbnails concurrently with staggered requests to avoid overloading
+      const generateWithDelay = async (index: number): Promise<{result: ThumbnailGenerateResponse | null, index: number}> => {
+        // Add small delay between requests to prevent rate limiting
+        await new Promise(resolve => setTimeout(resolve, index * 200))
+        
         try {
           const result = await generateSingleThumbnail(videoId)
-          // Mark this specific thumbnail as loaded
+          
+          // Mark this specific thumbnail as loaded and update state immediately
           setThumbnailLoadingStates(prev => {
             const newStates = [...prev]
             newStates[index] = false
             return newStates
           })
+          
           // Add thumbnail to the list as soon as it's ready
           if (result?.image_url) {
             setGeneratedThumbnails(prev => {
               const newThumbnails = [...prev]
               newThumbnails[index] = result.image_url
+              console.log(`[Thumbnail][Batch Generate] Added thumbnail ${index + 1} to position ${index}`)
               return newThumbnails
             })
           }
-          return result
+          
+          return { result: result || null, index }
         } catch (error) {
           console.error(`[Thumbnail][Batch Generate] Failed to generate thumbnail ${index + 1}:`, error)
           // Mark as failed (not loading anymore)
@@ -136,18 +148,20 @@ export default function useThumbnail() {
             newStates[index] = false
             return newStates
           })
-          return null
+          return { result: null, index }
         }
-      })
+      }
 
+      // Generate all thumbnails with staggered timing
+      const promises = Array.from({ length: 5 }, (_, index) => generateWithDelay(index))
       const results = await Promise.allSettled(promises)
       
       // Extract successful thumbnails
       const thumbnails: string[] = []
       const failedCount = results.filter((result, index) => {
-        if (result.status === 'fulfilled' && result.value?.image_url) {
-          thumbnails.push(result.value.image_url)
-          console.log(`[Thumbnail][Batch Generate] Thumbnail ${index + 1} generated:`, result.value.image_url)
+        if (result.status === 'fulfilled' && result.value?.result?.image_url) {
+          thumbnails.push(result.value.result.image_url)
+          console.log(`[Thumbnail][Batch Generate] Thumbnail ${index + 1} generated:`, result.value.result.image_url)
           return false
         } else {
           console.error(`[Thumbnail][Batch Generate] Thumbnail ${index + 1} failed:`, result)
@@ -243,6 +257,14 @@ export default function useThumbnail() {
       return
     }
 
+    // Validate thumbnail URL format
+    if (!thumbnailUrl.startsWith('http')) {
+      const errorMsg = 'Invalid thumbnail URL format'
+      setError(errorMsg)
+      toast({ title: 'Invalid URL', description: errorMsg })
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
@@ -250,22 +272,34 @@ export default function useThumbnail() {
       const headers = getAuthHeaders()
       const url = `/thumbnail-generator/${videoId}/save`
       
-      console.log('[Thumbnail][Save] Request', {
+      console.log('[Thumbnail][Save] Request Details', {
         url: `${API_BASE_URL}${url}`,
         videoId,
-        thumbnailUrl: thumbnailUrl.substring(0, 100) + '...',
+        thumbnailUrl: thumbnailUrl,
+        thumbnailUrlLength: thumbnailUrl.length,
         hasAuthHeader: !!(headers as any)?.Authorization,
+        requestPayload: { thumbnail_url: thumbnailUrl }
       })
 
       const requestData: ThumbnailSaveRequest = {
         thumbnail_url: thumbnailUrl
       }
 
+      // Ensure headers are properly set
+      const requestHeaders = {
+        ...headers,
+        'Content-Type': 'application/json',
+        'accept': 'application/json'
+      }
+
+      console.log('[Thumbnail][Save] Making API call with data:', {
+        url,
+        requestData,
+        headers: Object.keys(requestHeaders)
+      })
+
       const res = await axiosInstance.post(url, requestData, { 
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        }
+        headers: requestHeaders
       })
       
       console.log('[Thumbnail][Save] Response', {
@@ -275,23 +309,29 @@ export default function useThumbnail() {
         videoId: res.data?.video_id,
         thumbnailUrl: res.data?.thumbnail_url,
         savedAt: res.data?.saved_at,
+        fullResponse: res.data
       })
 
-      toast({ 
-        title: 'Thumbnail Saved', 
-        description: 'Thumbnail saved successfully.' 
-      })
+      if (res.data?.success) {
+        toast({ 
+          title: 'Thumbnail Saved', 
+          description: 'Thumbnail saved successfully.' 
+        })
+      } else {
+        throw new Error(res.data?.message || 'Save operation failed')
+      }
       
       return res.data
     } catch (error: any) {
       let errorMessage = 'Failed to save thumbnail'
       
       if (axios.isAxiosError(error)) {
-        console.error('[Thumbnail][Save] Error', {
+        console.error('[Thumbnail][Save] Error Details', {
           status: error.response?.status,
           statusText: error.response?.statusText,
           url: error.config?.url,
-          data: error.response?.data,
+          requestData: error.config?.data,
+          responseData: error.response?.data,
           message: error.message,
         })
 
