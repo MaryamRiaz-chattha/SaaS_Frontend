@@ -1,66 +1,61 @@
 
 
-```markdown
 ## 📁 Folder Structure for Social Media Automation Dashboard
 
-This project follows a clean, modular, and scalable architecture to support multiple social media automation modules — including **YouTube**, **LinkedIn**, **Instagram**, and **Facebook**.  
+This project follows a modular, scalable structure to support automation for multiple social platforms — **YouTube**, **LinkedIn**, **Instagram**, and **Facebook**.
 
-Each module includes separate routes, hooks, and service layers for maintainability and easy expansion.
+Each module contains its own routes, services, and hooks for clear separation and easy maintenance.
 
 ---
 
-### 🧱 Directory Overview
-
-```
-
+```bash
 src/
 ├── app/                                # Next.js App Router
 │   ├── auth/                           # Authentication pages
-│   │   ├── login/                      # User login page
-│   │   ├── signup/                     # User registration page
+│   │   ├── login/                      # User login
+│   │   ├── signup/                     # User registration
 │   │   ├── credential/                 # API credentials setup
 │   │   ├── youtube-connect/            # YouTube OAuth integration
 │   │   ├── linkedin-connect/           # LinkedIn OAuth integration
 │   │   ├── instagram-connect/          # Instagram OAuth integration
 │   │   └── facebook-connect/           # Facebook OAuth integration
 │
-│   ├── dashboard/                      # Main dashboard module
+│   ├── dashboard/                      # Main dashboard
 │   │   ├── videos/                     # Manage uploaded videos
-│   │   ├── playlists/                  # Playlist creation and management
+│   │   ├── playlists/                  # Playlist management
 │   │   ├── upload/                     # Video upload interface
-│   │   ├── user-settings/              # User profile and account settings
-│   │   │
+│   │   ├── user-settings/              # User profile & account settings
+│   │
 │   │   ├── linkedin-automation/        # 🆕 LinkedIn Automation Module
-│   │   │   ├── page.tsx                # Main LinkedIn automation page (UI + logic)
-│   │   │   ├── layout.tsx              # Optional layout (shared design)
+│   │   │   ├── page.tsx                # LinkedIn automation UI
 │   │   │   ├── services/
-│   │   │   │   └── linkedinService.ts  # LinkedIn API integration logic
+│   │   │   │   └── linkedinService.ts  # LinkedIn API integration
 │   │   │   ├── hooks/
-│   │   │   │   ├── useLinkedInAuth.ts  # LinkedIn authentication handler
-│   │   │   │   ├── useAutoPost.ts      # LinkedIn auto-posting functionality
-│   │   │   │   └── useLinkedInStats.ts # LinkedIn analytics/insights
+│   │   │   │   ├── useLinkedInAuth.ts  # Auth & token handling
+│   │   │   │   ├── useAutoPost.ts      # Auto-posting logic
+│   │   │   │   └── useLinkedInStats.ts # Stats & analytics
 │   │   │   ├── assets/
-│   │   │   │   └── linkedin.svg        # LinkedIn icon or branding
+│   │   │   │   └── linkedin.svg
 │   │   │   └── components/
 │   │   │       ├── LinkedInPostCard.tsx
 │   │   │       ├── LinkedInScheduler.tsx
 │   │   │       └── LinkedInStatsCard.tsx
-│   │   │
+│   │
 │   │   ├── instagram-automation/       # 🆕 Instagram Automation Module
 │   │   │   ├── page.tsx
 │   │   │   ├── services/
-│   │   │   │   └── instagramService.ts # Instagram Graph API integration
+│   │   │   │   └── instagramService.ts
 │   │   │   ├── hooks/
 │   │   │   │   ├── useInstagramAuth.ts
 │   │   │   │   ├── useAutoPost.ts
 │   │   │   │   └── useInstagramStats.ts
 │   │   │   └── assets/
 │   │   │       └── instagram.svg
-│   │   │
+│   │
 │   │   └── facebook-automation/        # 🆕 Facebook Automation Module
 │   │       ├── page.tsx
 │   │       ├── services/
-│   │       │   └── facebookService.ts  # Facebook Graph API integration
+│   │       │   └── facebookService.ts
 │   │       ├── hooks/
 │   │       │   ├── useFacebookAuth.ts
 │   │       │   ├── useAutoPost.ts
@@ -68,30 +63,30 @@ src/
 │   │       └── assets/
 │   │           └── facebook.svg
 │
-│   ├── youtube-studio-dashboard/       # YouTube Studio Clone
+│   ├── youtube-studio-dashboard/       # YouTube Studio clone
 │   │   ├── Analytics/
 │   │   ├── Content/
 │   │   ├── Community/
 │   │   ├── Earn/
 │   │   └── [other studio features]/
 │
-│   ├── feature-showcase/               # Feature highlights and demos
-│   ├── about-page/                     # About / Info page
+│   ├── feature-showcase/               # Feature showcase page
+│   ├── about-page/                     # About page
 │   └── globals.css                     # Global styles
 │
-├── components/                         # Reusable UI Components
+├── components/                         # Reusable UI components
 │   ├── landing-page-components/
 │   ├── dashboard/
 │   │   ├── overview/
 │   │   ├── videos/
 │   │   ├── youtube-videos/
-│   │   ├── linkedin-automation/        # LinkedIn-specific reusable UI
-│   │   ├── instagram-automation/       # Instagram-specific reusable UI
-│   │   └── facebook-automation/        # Facebook-specific reusable UI
+│   │   ├── linkedin-automation/
+│   │   ├── instagram-automation/
+│   │   └── facebook-automation/
 │   ├── upload/
 │   │   ├── sections/
 │   │   └── ui/
-│   └── ui/                             # Base Shadcn/UI components
+│   └── ui/                             # Shadcn/UI base components
 │
 ├── lib/                                # Shared logic, utilities & APIs
 │   ├── hooks/
@@ -111,41 +106,39 @@ src/
 │       ├── instagramService.ts
 │       └── facebookService.ts
 │
-├── types/                              # TypeScript Type Definitions
+├── types/                              # TypeScript type definitions
 │   ├── dashboard/
 │   ├── linkedin.d.ts
 │   ├── instagram.d.ts
 │   ├── facebook.d.ts
 │   └── upload.ts
 │
-├── styles/                             # Global & module-specific styles
+├── styles/                             # Extra stylesheets
 ├── public/                             # Static assets
-└── scripts/                            # Developer utility scripts
-
+└── scripts/                            # Developer/utility scripts
 ```
 
 ---
 
-### ⚙️ Modular Approach Summary
+### ⚙️ Modular Breakdown
 
-Each social module (YouTube, LinkedIn, Instagram, Facebook) includes:
-
-| Layer | Description |
-|-------|--------------|
-| **page.tsx** | Main UI and logic file for the module |
-| **services/** | Handles API integrations (YouTube/LinkedIn/Instagram/Facebook APIs) |
-| **hooks/** | Contains authentication, auto-posting, and analytics hooks |
-| **assets/** | Holds platform icons and static files |
-| **components/** | Contains module-specific reusable UI (scheduler, stats, post cards, etc.) |
+| Module                | Purpose                                            |
+| --------------------- | -------------------------------------------------- |
+| **YouTube**           | Upload, schedule, and analyze YouTube videos       |
+| **LinkedIn**          | Automate posts, schedule content, track engagement |
+| **Instagram**         | Manage reels, stories, and posts via automation    |
+| **Facebook**          | Handle Facebook page posting and analytics         |
+| **Shared Components** | Reusable UI elements built with Shadcn & Tailwind  |
 
 ---
 
-### 💡 Advantages of This Structure
-- ✅ **Modular & Scalable** — easily add new platforms (e.g., Twitter, TikTok)
-- ♻️ **Code Reuse** — shared UI and hooks through `components/` and `lib/`
-- 🧩 **Maintainable** — clear separation of concern across modules
-- 🚀 **Ready for SaaS Expansion** — suitable for multi-tenant or B2B automation platforms
+### 🧩 Highlights
+
+* ✅ **Clean Modular Design** — Each social media platform isolated in its own module
+* ♻️ **Code Reusability** — Shared UI & hooks for all automation modules
+* 🚀 **Scalable Architecture** — Easily extend to future platforms (Twitter, TikTok, etc.)
+* 🔐 **Secure OAuth Integration** — Platform-specific authentication flows
 
 ---
-this in your README to complete the documentation style?
-```
+
+
